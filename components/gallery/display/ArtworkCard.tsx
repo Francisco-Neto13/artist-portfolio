@@ -1,34 +1,54 @@
 'use client';
-import Image from 'next/image';
-import { Artwork, getOptimizedUrl, formatDate } from '../types';
+import { Artwork, getOptimizedUrl } from '../types';
 
-interface CardProps {
+interface ArtworkCardProps {
   art: Artwork;
-  index: number;
   onClick: () => void;
+  isAdmin?: boolean;
+  onEdit?: () => void;
 }
 
-export default function ArtworkCard({ art, index, onClick }: CardProps) {
+export default function ArtworkCard({ art, onClick, isAdmin, onEdit }: ArtworkCardProps) {
   return (
     <div 
+      className="group cursor-pointer break-inside-avoid mb-8 relative" 
       onClick={onClick}
-      className="group relative bg-slate-900/50 rounded-xl overflow-hidden border border-blue-900/20 p-2 transition-all hover:border-blue-500/40 cursor-zoom-in"
-      style={{ animation: `fadeInScale 0.6s ease-out ${index * 0.08}s both` }}
     >
-      <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-slate-950">
-        <Image 
-          src={getOptimizedUrl(art.image_url)}
+      {isAdmin && (
+        <button 
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            onEdit?.(); 
+          }}
+          className="absolute top-3 right-3 z-20 p-2.5 bg-slate-900/90 hover:bg-blue-600 text-white rounded-xl opacity-0 group-hover:opacity-100 transition-all border border-white/10 backdrop-blur-md shadow-xl cursor-pointer"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+        </button>
+      )}
+
+      <div className="relative overflow-hidden rounded-xl bg-slate-900 transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(59,130,246,0.15)]">
+        <img 
+          src={getOptimizedUrl(art.image_url, 85, 800)} 
           alt={art.title}
-          fill
-          sizes="(max-width: 768px) 100vw, 33vw"
-          className="object-cover transition-all duration-1000 group-hover:scale-105"
+          className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 to-transparent opacity-0 group-hover:opacity-100 transition-all p-6 flex flex-col justify-end">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-blue-400 text-[8px] font-black uppercase tracking-widest">{art.type}</span>
-          </div>
-          <h3 className="text-lg font-light text-white">{art.title}</h3>
-          <p className="text-slate-400 text-[9px] italic mt-1 line-clamp-1">"{art.description}"</p>
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      </div>
+
+      <div className="mt-4 px-1">
+        <h3 className="text-sm font-bold text-slate-200 group-hover:text-blue-400 transition-colors duration-300 tracking-wide">
+          {art.title}
+        </h3>
+        <div className="flex items-center gap-2 mt-1.5">
+          <span className="text-[9px] uppercase tracking-[0.2em] text-slate-500 font-bold">
+            {art.category}
+          </span>
+          <span className="w-1 h-1 bg-slate-800 rounded-full" />
+          <span className="text-[9px] uppercase tracking-[0.2em] text-blue-500/70 font-bold">
+            {art.type}
+          </span>
         </div>
       </div>
     </div>

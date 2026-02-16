@@ -1,73 +1,78 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { convertToWebP } from '../types';
+import { Artwork, convertToWebP } from '../types';
 
-export function useUploadLogic(onSuccess: () => void, onClose: () => void) {
+export function useUploadLogic(onSuccess: () => void, onClose: () => void, editingArtwork?: Artwork | null) {
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [availableTypes, setAvailableTypes] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: '',
-    description: '',
     category: 'Digital',
     type: ''
   });
 
-  const resetForm = () => {
+  useEffect(() => {
+    const fetchTypes = async () => {
+      const { data } = await supabase.from('artwork_types').select('name').order('name');
+      if (data) setAvailableTypes(data.map(t => t.name));
+    };
+    fetchTypes();
+  }, []);
+
+  const resetForm = useCallback(() => {
     setFile(null);
     setPreviewUrl(null);
     setUploadProgress(0);
-    setFormData({ title: '', description: '', category: 'Digital', type: '' });
-  };
+    setFormData({ title: '', category: 'Digital', type: '' });
+  }, []);
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) return alert('Selecione uma imagem!');
+    if (!file && !editingArtwork) return alert('Selecione uma imagem!');
+    if (!formData.type) return alert('Selecione um tema!');
+
     setLoading(true);
-    setUploadProgress(0);
-
     try {
-      setUploadProgress(20);
-      const webpBlob = await convertToWebP(file);
-      setUploadProgress(40);
+      let publicUrl = editingArtwork?.image_url || '';
 
-      const fileName = `${Math.random()}-${Date.now()}.webp`;
-      const filePath = `artworks/${fileName}`;
+      if (file) {
+        setUploadProgress(20);
+        const webpBlob = await convertToWebP(file);
+        setUploadProgress(40);
+        const fileName = `${Math.random()}-${Date.now()}.webp`;
+        const { error: uploadError } = await supabase.storage
+          .from('gallery').upload(`artworks/${fileName}`, webpBlob);
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from('gallery').getPublicUrl(`artworks/${fileName}`);
+        publicUrl = data.publicUrl;
+      }
 
-      const { error: uploadError } = await supabase.storage
-        .from('gallery')
-        .upload(filePath, webpBlob, { contentType: 'image/webp', cacheControl: '3600' });
-
-      if (uploadError) throw uploadError;
-      setUploadProgress(70);
-
-      const { data: { publicUrl } } = supabase.storage.from('gallery').getPublicUrl(filePath);
-      setUploadProgress(85);
-
-      const { error: dbError } = await supabase.from('artworks').insert([{
-        ...formData,
+      setUploadProgress(80);
+      const payload = {
+        title: formData.title,
+        category: formData.category,
+        type: formData.type,
         image_url: publicUrl
-      }]);
+      };
+
+      const { error: dbError } = editingArtwork 
+        ? await supabase.from('artworks').update(payload).eq('id', editingArtwork.id)
+        : await supabase.from('artworks').insert([payload]);
 
       if (dbError) throw dbError;
+      
       setUploadProgress(100);
-
-      setTimeout(() => {
-        onSuccess();
-        onClose();
-        resetForm();
-      }, 500);
+      setTimeout(() => { onSuccess(); onClose(); resetForm(); }, 500);
     } catch (error: any) {
-      alert('Erro no upload: ' + error.message);
-      setUploadProgress(0);
-    } finally {
-      setLoading(false);
-    }
+      alert('Erro: ' + error.message);
+    } finally { setLoading(false); }
   };
 
   return {
     file, setFile, previewUrl, setPreviewUrl, formData, setFormData,
-    loading, uploadProgress, handleUpload, resetForm
+    loading, uploadProgress, handleUpload, resetForm, availableTypes
   };
 }

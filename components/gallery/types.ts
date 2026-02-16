@@ -1,43 +1,52 @@
 export interface Artwork {
-  id: number;
+  id: string;
   title: string;
-  description: string;
-  category: string;
-  type: string;
-  created_at: string;
   image_url: string;
+  category: string;
+  type: string; 
+  created_at: string; 
 }
 
-export const CATEGORIES = ['Digital', 'Painting', 'Sketches'];
+export const CATEGORIES = ['Digital', 'Traditional', 'Photography', 'Sculpture'] as const;
 
-export const getOptimizedUrl = (url: string, quality = 75, width = 800) => {
-  if (!url) return '';
+export const getOptimizedUrl = (url: string, quality = 80, width = 800) => {
+  if (!url || !url.includes('supabase.co')) return url;
   return `${url}?width=${width}&quality=${quality}&format=webp`;
 };
 
-export const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).replace('.', '');
-};
-
-export const convertToWebP = async (file: File): Promise<Blob> => {
+export async function convertToWebP(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
-    const img = new window.Image();
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      if (!ctx) return reject(new Error('Canvas context failed'));
-      ctx.drawImage(img, 0, 0);
-      canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error('WebP conversion failed'));
-      }, 'image/webp', 0.95);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Não foi possível obter o contexto do canvas'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Erro na conversão WebP'));
+        }, 'image/webp', 0.95);
+      };
+      img.onerror = () => reject(new Error('Erro ao carregar imagem para conversão'));
     };
-    img.src = URL.createObjectURL(file);
+    reader.onerror = () => reject(new Error('Erro ao ler o arquivo original'));
+  });
+}
+
+export const formatDate = (dateString?: string) => {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleDateString('pt-BR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
   });
 };

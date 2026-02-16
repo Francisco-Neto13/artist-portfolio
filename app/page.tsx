@@ -1,5 +1,5 @@
 import Hero from '@/components/Hero';
-import Gallery from '@/components/Gallery';
+import Gallery from '@/components/gallery/display/Gallery';
 
 export default function Home() {
   return (
@@ -8,7 +8,7 @@ export default function Home() {
         <Hero />
       </div>
       
-      <section className="animate-reveal delay-2 max-w-6xl mx-auto px-6 pb-24 border-t border-blue-900/20 pt-16">
+      <section className="max-w-6xl mx-auto px-6 pb-24 border-t border-blue-900/20 pt-16">
         <Gallery />
       </section>
     </main>

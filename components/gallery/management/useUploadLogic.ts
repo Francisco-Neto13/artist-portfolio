@@ -14,7 +14,7 @@ export function useUploadLogic(onSuccess: () => void, onClose: () => void, editi
   const [uploadProgress, setUploadProgress] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isOptimized, setIsOptimized] = useState(false); // Novo estado para o aviso
+  const [isOptimized, setIsOptimized] = useState(false); 
   const [availableCategories, setAvailableCategories] = useState<ArtworkCategory[]>([]);
   const [availableTypes, setAvailableTypes] = useState<ArtworkType[]>([]);
   const [formData, setFormData] = useState({ title: '', category: '', type: '' });
@@ -81,7 +81,6 @@ export function useUploadLogic(onSuccess: () => void, onClose: () => void, editi
 
       if (file) {
         setUploadProgress(30);
-        // Agora convertToWebP retorna { blob, wasResized }
         const { blob } = await convertToWebP(file);
         const fileName = `${Math.random()}-${Date.now()}.webp`;
 

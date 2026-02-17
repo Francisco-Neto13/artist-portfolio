@@ -1,0 +1,112 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Pencil } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { ProfileData, DEFAULT_PROFILE } from './types';
+import HeroContent from './HeroContent';
+import EditPanel from './EditPanel';
+import InfoModal from './InfoModal';
+
+export default function Hero() {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [activeModal, setActiveModal] = useState<null | 'languages' | 'hobbies'>(null);
+  const [displayText, setDisplayText] = useState('');
+  const [profile, setProfile] = useState<ProfileData>(DEFAULT_PROFILE);
+  const [draft, setDraft] = useState<ProfileData>(DEFAULT_PROFILE);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAdmin(!!session);
+      const { data } = await supabase.from('profiles').select('*').single();
+      if (data) {
+        setProfile(data);
+        setDraft(data);
+      }
+    };
+    load();
+  }, []);
+
+  useEffect(() => {
+    let index = 0;
+    setDisplayText('');
+    const fullText = profile.full_name || 'Atmisuki.';
+    const t = setTimeout(() => {
+      const iv = setInterval(() => {
+        if (index <= fullText.length) {
+          setDisplayText(fullText.slice(0, index));
+          index++;
+        } else clearInterval(iv);
+      }, 100);
+      return () => clearInterval(iv);
+    }, 800);
+    return () => clearTimeout(t);
+  }, [profile.full_name]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
+      const { error } = await supabase.from('profiles').upsert({
+        id: session.user.id,
+        ...draft,
+        updated_at: new Date().toISOString(),
+      });
+      if (error) throw error;
+      setProfile(draft);
+      setIsEditing(false);
+    } catch (err: any) {
+      console.error('Save failed:', err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setDraft(profile);
+    setIsEditing(false);
+  };
+
+  return (
+    <section className="min-h-screen flex flex-col items-center justify-center bg-slate-950 relative px-6 py-16">
+
+      <HeroContent
+        profile={isEditing ? draft : profile}
+        displayText={displayText}
+        onOpenModal={setActiveModal}
+      />
+
+      {isAdmin && (
+        <button
+          onClick={() => setIsEditing(true)}
+          className="mt-10 flex items-center gap-2 px-5 py-2.5 bg-white/[0.03] border border-white/[0.07] hover:border-blue-500/30 hover:bg-blue-500/[0.05] text-slate-500 hover:text-slate-300 rounded-full transition-all cursor-pointer group"
+        >
+          <Pencil size={12} className="group-hover:text-blue-400 transition-colors" />
+          <span className="text-[9px] font-black uppercase tracking-[0.25em]">Edit Profile</span>
+        </button>
+      )}
+
+      {isAdmin && isEditing && (
+        <EditPanel
+          draft={draft}
+          isSaving={isSaving}
+          onDraftChange={setDraft}
+          onSave={handleSave}
+          onCancel={handleCancel}
+        />
+      )}
+
+      {activeModal && (
+        <InfoModal
+          type={activeModal}
+          profile={isEditing ? draft : profile}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
+    </section>
+  );
+}

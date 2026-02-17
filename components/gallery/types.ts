@@ -2,12 +2,22 @@ export interface Artwork {
   id: string;
   title: string;
   image_url: string;
-  category: string;
+  category: string; 
   type: string; 
   created_at: string; 
 }
 
-export const CATEGORIES = ['Digital', 'Traditional', 'Photography', 'Sculpture'] as const;
+export interface ArtworkCategory {
+  id: string;
+  name: string;
+  created_at?: string;
+}
+
+export interface ArtworkType {
+  id: string;
+  name: string;
+  created_at?: string;
+}
 
 export const getOptimizedUrl = (url: string, quality = 80, width = 800) => {
   if (!url || !url.includes('supabase.co')) return url;

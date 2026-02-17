@@ -12,9 +12,18 @@ interface UploadModalProps {
 
 export default function UploadModal({ isOpen, onClose, onSuccess, editingArtwork }: UploadModalProps) { 
   const { 
-    file, setFile, previewUrl, setPreviewUrl, formData, setFormData, 
-    loading, uploadProgress, handleUpload, resetForm, 
-    availableCategories, availableTypes
+    handleFileChange, 
+    previewUrl, 
+    setPreviewUrl, 
+    isOptimized,      
+    formData, 
+    setFormData, 
+    loading, 
+    uploadProgress, 
+    handleUpload, 
+    resetForm, 
+    availableCategories, 
+    availableTypes
   } = useUploadLogic(onSuccess, onClose, editingArtwork); 
 
   useEffect(() => { 
@@ -43,7 +52,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess, editingArtwork
             {editingArtwork ? 'Edit Artwork' : 'New Artwork'} 
           </h2> 
           <p className="text-slate-500 text-[9px] uppercase tracking-[0.2em] mt-1"> 
-            WebP 95% Quality • Automatic Conversion 
+            WebP 82% Quality • Automatic Conversion 
           </p> 
           <button   
             onClick={() => !loading && onClose()}   
@@ -54,7 +63,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess, editingArtwork
         </div> 
 
         <form onSubmit={handleUpload} className="p-8 space-y-6 overflow-y-auto custom-scrollbar"> 
-          <div className="aspect-video w-full rounded-xl overflow-hidden border-2 border-dashed border-slate-700 bg-slate-950 group relative transition-all hover:border-blue-500/40"> 
+          <div className="aspect-video w-full rounded-xl overflow-hidden border-2 border-dashed border-slate-700 bg-slate-950 group relative transition-all hover:border-blue-500/40 shrink-0"> 
             {previewUrl ? ( 
               <> 
                 <img src={previewUrl} className="w-full h-full object-contain" alt="Preview" /> 
@@ -62,7 +71,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess, editingArtwork
                   <span className="text-white text-[10px] font-bold uppercase tracking-[0.2em] border border-white/20 px-4 py-2 rounded-full bg-white/5">Change File</span> 
                   <input type="file" className="hidden" accept="image/png, image/jpeg, image/jpg, image/webp" onChange={(e) => { 
                     const f = e.target.files?.[0]; 
-                    if (f) { setFile(f); setPreviewUrl(URL.createObjectURL(f)); } 
+                    if (f) handleFileChange(f);
                   }} /> 
                 </label> 
               </> 
@@ -84,11 +93,24 @@ export default function UploadModal({ isOpen, onClose, onSuccess, editingArtwork
                 </div> 
                 <input type="file" className="hidden" accept="image/png, image/jpeg, image/jpg, image/webp" onChange={(e) => { 
                   const f = e.target.files?.[0]; 
-                  if (f) { setFile(f); setPreviewUrl(URL.createObjectURL(f)); } 
+                  if (f) handleFileChange(f);
                 }} required={!editingArtwork} /> 
               </label> 
             )} 
           </div> 
+
+          {isOptimized && (
+            <div className="flex items-center gap-2 px-1 py-1 animate-in fade-in duration-500">
+              <div className="flex-shrink-0 w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                <svg className="w-2.5 h-2.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <p className="text-[9px] font-bold text-emerald-500/90 uppercase tracking-[0.15em]">
+                ✔ Image optimized for web (resized automatically)
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-6"> 
             <div className="col-span-2"> 
@@ -102,7 +124,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess, editingArtwork
                 required   
               /> 
             </div> 
-               
+                
             <div> 
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">Category</label>
               <select   

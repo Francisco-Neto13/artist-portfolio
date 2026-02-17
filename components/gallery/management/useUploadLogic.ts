@@ -2,20 +2,22 @@ import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Artwork, convertToWebP, ArtworkCategory, ArtworkType } from '../types';
 
+const extractStoragePath = (url: string): string | null => {
+  const marker = '/gallery/';
+  const idx = url.indexOf(marker);
+  if (idx === -1) return null;
+  return url.substring(idx + marker.length);
+};
+
 export function useUploadLogic(onSuccess: () => void, onClose: () => void, editingArtwork?: Artwork | null) {
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  
+  const [isOptimized, setIsOptimized] = useState(false); // Novo estado para o aviso
   const [availableCategories, setAvailableCategories] = useState<ArtworkCategory[]>([]);
   const [availableTypes, setAvailableTypes] = useState<ArtworkType[]>([]);
-
-  const [formData, setFormData] = useState({
-    title: '',
-    category: '', 
-    type: ''
-  });
+  const [formData, setFormData] = useState({ title: '', category: '', type: '' });
 
   const fetchMetadata = useCallback(async () => {
     const [catRes, typeRes] = await Promise.all([
@@ -31,12 +33,25 @@ export function useUploadLogic(onSuccess: () => void, onClose: () => void, editi
   const resetForm = useCallback(() => {
     setFile(null);
     setPreviewUrl(null);
+    setIsOptimized(false);
     setUploadProgress(0);
-    setFormData({ 
-      title: '', 
-      category: '', 
-      type: '' 
-    });
+    setFormData({ title: '', category: '', type: '' });
+  }, []);
+
+  const handleFileChange = useCallback((selectedFile: File) => {
+    setFile(selectedFile);
+    const url = URL.createObjectURL(selectedFile);
+    setPreviewUrl(url);
+
+    const img = new Image();
+    img.src = url;
+    img.onload = () => {
+      if (img.width > 2048 || img.height > 2048) {
+        setIsOptimized(true);
+      } else {
+        setIsOptimized(false);
+      }
+    };
   }, []);
 
   const addItem = async (table: 'artwork_categories' | 'artwork_types', name: string) => {
@@ -46,64 +61,78 @@ export function useUploadLogic(onSuccess: () => void, onClose: () => void, editi
 
   const removeItem = async (table: 'artwork_categories' | 'artwork_types', id: string, name: string) => {
     const column = table === 'artwork_categories' ? 'category' : 'type';
-    
     const { count } = await supabase
       .from('artworks')
       .select('*', { count: 'exact', head: true })
       .eq(column, name);
-
-    if (count && count > 0) {
-      alert(`Safety Lock: Cannot delete "${name}". It is being used by ${count} artworks.`);
-      return;
-    }
-
-    if (confirm(`Delete "${name}"?`)) {
-      const { error } = await supabase.from(table).delete().eq('id', id);
-      if (!error) fetchMetadata();
-    }
+    if (count && count > 0) throw new Error(`in_use:${count}`);
+    const { error } = await supabase.from(table).delete().eq('id', id);
+    if (error) throw error;
+    fetchMetadata();
   };
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file && !editingArtwork) return alert('Select an image!');
-    
-    if (!formData.category || !formData.type) {
-        return alert('Please select both a Category and a Theme!');
-    }
+    if (!formData.category || !formData.type) return;
 
     setLoading(true);
     try {
       let publicUrl = editingArtwork?.image_url || '';
+
       if (file) {
         setUploadProgress(30);
-        const webpBlob = await convertToWebP(file);
+        // Agora convertToWebP retorna { blob, wasResized }
+        const { blob } = await convertToWebP(file);
         const fileName = `${Math.random()}-${Date.now()}.webp`;
-        const { error: upErr } = await supabase.storage.from('gallery').upload(`artworks/${fileName}`, webpBlob);
+
+        const { error: upErr } = await supabase.storage
+          .from('gallery')
+          .upload(`artworks/${fileName}`, blob);
         if (upErr) throw upErr;
+
+        if (editingArtwork?.image_url) {
+          const oldPath = extractStoragePath(editingArtwork.image_url);
+          if (oldPath) await supabase.storage.from('gallery').remove([oldPath]);
+        }
+
         const { data } = supabase.storage.from('gallery').getPublicUrl(`artworks/${fileName}`);
         publicUrl = data.publicUrl;
       }
+
       setUploadProgress(80);
       const payload = { ...formData, image_url: publicUrl };
-      const { error } = editingArtwork 
+
+      const { error } = editingArtwork
         ? await supabase.from('artworks').update(payload).eq('id', editingArtwork.id)
         : await supabase.from('artworks').insert([payload]);
-      
-      if (!error) { 
-        setUploadProgress(100);
-        onSuccess(); 
-        onClose(); 
-      }
-    } catch (err) { 
-      alert('Upload failed'); 
-    } finally { 
-      setLoading(false); 
+
+      if (error) throw error;
+
+      setUploadProgress(100);
+      onSuccess();
+      onClose();
+    } catch (err) {
+      console.error('Upload failed:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   return {
-    file, setFile, previewUrl, setPreviewUrl, formData, setFormData,
-    loading, uploadProgress, handleUpload, resetForm,
-    availableCategories, availableTypes, addItem, removeItem
+    file, 
+    handleFileChange,
+    previewUrl, 
+    setPreviewUrl, 
+    isOptimized,
+    formData, 
+    setFormData,
+    loading, 
+    uploadProgress, 
+    handleUpload, 
+    resetForm,
+    availableCategories, 
+    availableTypes, 
+    addItem, 
+    removeItem
   };
 }

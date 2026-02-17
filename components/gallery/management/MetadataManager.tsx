@@ -149,13 +149,17 @@ export default function MetadataManager({
                 <span className="text-slate-300 font-medium">"{confirmState.name}"</span>.
                 This action cannot be undone.
               </p>
+
               {confirmState.artworkCount !== undefined && confirmState.artworkCount > 0 && (
                 <div className="mt-3 flex items-start gap-2.5 px-3 py-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
                   <svg className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01" />
                   </svg>
                   <p className="text-amber-300/80 text-[10px] leading-relaxed">
-                    This {activeType} is linked to <span className="text-amber-300 font-semibold">{confirmState.artworkCount} artwork{confirmState.artworkCount !== 1 ? 's' : ''}</span>. Deletion will be blocked to protect existing artworks.
+                    This {activeType} is linked to{' '}
+                    <span className="text-amber-300 font-semibold">
+                      {confirmState.artworkCount} artwork{confirmState.artworkCount !== 1 ? 's' : ''}
+                    </span>. Deletion will be blocked to protect existing artworks.
                   </p>
                 </div>
               )}
@@ -262,7 +266,7 @@ export default function MetadataManager({
                 </div>
               ) : (
                 <div
-                  className="meta-list max-h-56 overflow-y-auto divide-y divide-white/[0.04] pr-3"
+                  className="meta-list max-h-48 overflow-y-auto divide-y divide-white/[0.04] pr-3"
                   style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(59,130,246,0.2) transparent' }}
                 >
                   <style>{`
@@ -307,6 +311,7 @@ export default function MetadataManager({
             <p className="text-[10px] text-slate-500 text-center tracking-widest uppercase">
               {items.length} {items.length === 1 ? activeType : `${activeType}s`}
             </p>
+
           </div>
         </div>
       </div>

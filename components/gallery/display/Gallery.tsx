@@ -6,6 +6,7 @@ import UploadModal from '@/components/gallery/management/UploadModal';
 import MetadataManager from '@/components/gallery/management/MetadataManager'; 
 import ArtworkCard from '@/components/gallery/display/ArtworkCard';
 import ArtworkLightbox from '@/components/gallery/display/ArtworkLightbox';
+import StorageMeter from '@/components/gallery/management/StorageMeter';
 
 export default function Gallery() {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
@@ -20,6 +21,7 @@ export default function Gallery() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [managerConfig, setManagerConfig] = useState<{ open: boolean, type: 'category' | 'theme' }>({ open: false, type: 'category' });
 
+  const [storageRefresh, setStorageRefresh] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const fetchArtworks = async () => {
@@ -167,6 +169,12 @@ export default function Gallery() {
         </div>
       </div>
 
+      {isAdmin && (
+        <div className="w-full">
+          <StorageMeter refreshTrigger={storageRefresh} />
+        </div>
+      )}
+
       <main className="mt-16 max-w-7xl mx-auto px-6 pb-24">
         <div className="columns-1 md:columns-2 lg:columns-3 gap-10">
           {isAdmin && (
@@ -187,7 +195,8 @@ export default function Gallery() {
               art={art} 
               isAdmin={isAdmin}
               onEdit={() => { setEditingArtwork(art); setIsModalOpen(true); }}
-              onClick={() => { setSelectedArtwork(art); setSelectedIndex(index); }} 
+              onClick={() => { setSelectedArtwork(art); setSelectedIndex(index); }}
+              onDelete={() => { fetchArtworks(); setStorageRefresh(n => n + 1); }}
             />
           ))}
         </div>
@@ -208,7 +217,7 @@ export default function Gallery() {
       <UploadModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        onSuccess={() => { fetchArtworks(); fetchMetadata(); }} 
+        onSuccess={() => { fetchArtworks(); fetchMetadata(); setStorageRefresh(n => n + 1); }} 
         editingArtwork={editingArtwork} 
       />
 

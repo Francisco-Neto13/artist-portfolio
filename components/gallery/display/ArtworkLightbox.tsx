@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom'; 
-import { Artwork, getOptimizedUrl, formatDate } from '../types';
+import { Artwork } from '../types';
+import { getOptimizedUrl, formatDate } from '@/lib/imageUtils';
 
 interface LightboxProps {
   artwork: Artwork;

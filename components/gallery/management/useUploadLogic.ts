@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Artwork, convertToWebP, ArtworkCategory, ArtworkType } from '../types';
+import { Artwork, ArtworkCategory, ArtworkType } from '../types';
+import { convertToWebP } from '@/lib/imageUtils';
 
 const extractStoragePath = (url: string): string | null => {
   const marker = '/gallery/';

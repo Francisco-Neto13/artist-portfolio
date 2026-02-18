@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Artwork, getOptimizedUrl } from '../types';
+import { Artwork } from '../types';
+import { getOptimizedUrl } from '@/lib/imageUtils';
 
 const extractStoragePath = (url: string): string | null => {
   const marker = '/gallery/';

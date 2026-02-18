@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { Instagram, Twitter, Mail, Plus, Trash2, Check, X, Camera } from 'lucide-react';
+import { Instagram, Twitter, Mail, Plus, Trash2, Check, X, Camera, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { ProfileData, BIO_MAX } from './types';
+import { convertToWebP } from '@/lib/imageUtils';
 
 interface EditPanelProps {
   draft: ProfileData;
@@ -44,18 +45,37 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     setAvatarUploading(true);
     try {
-      const ext = file.name.split('.').pop();
-      const fileName = `avatar-${Date.now()}.${ext}`;
+      const { blob } = await convertToWebP(file);
+
+      if (draft.avatar_url && draft.avatar_url.includes('supabase.co')) {
+        const oldFileName = draft.avatar_url.split('/').pop();
+        if (oldFileName) {
+          await supabase.storage
+            .from('perfil')
+            .remove([oldFileName]);
+        }
+      }
+
+      const fileName = `avatar-${Date.now()}.webp`;
+
       const { error: upErr } = await supabase.storage
         .from('perfil')
-        .upload(fileName, file, { upsert: true });
+        .upload(fileName, blob, { 
+          upsert: true,
+          contentType: 'image/webp'
+        });
+
       if (upErr) throw upErr;
+
       const { data } = supabase.storage.from('perfil').getPublicUrl(fileName);
       onDraftChange({ ...draft, avatar_url: data.publicUrl });
+
     } catch (err: any) {
       console.error('Avatar upload failed:', err.message);
+      alert('Upload failed: ' + err.message);
     } finally {
       setAvatarUploading(false);
     }
@@ -83,23 +103,36 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5" style={{ scrollbarWidth: 'thin' }}>
           
           <div className="flex flex-col items-center gap-3 pb-2">
-            <label className="relative group cursor-pointer">
-              <div className="w-20 h-20 rounded-full bg-slate-800 border border-white/[0.06] overflow-hidden relative flex items-center justify-center">
+            <label className={`relative group cursor-pointer ${avatarUploading ? 'pointer-events-none' : ''}`}>
+              {avatarUploading && (
+                <div className="absolute -inset-1 rounded-full border border-blue-500/30 border-t-blue-500 animate-spin z-10" />
+              )}
+              
+              <div className={`w-20 h-20 rounded-full bg-slate-800 border border-white/[0.06] overflow-hidden relative flex items-center justify-center transition-all duration-300 ${avatarUploading ? 'scale-90 brightness-50' : 'hover:border-blue-500/30'}`}>
                 {draft.avatar_url ? (
-                  <Image src={draft.avatar_url} alt="Avatar" fill className="object-cover" unoptimized />
+                  <Image 
+                    src={draft.avatar_url} 
+                    alt="Avatar" 
+                    fill 
+                    className={`object-cover transition-all duration-500 ${avatarUploading ? 'blur-sm scale-110' : ''}`} 
+                    unoptimized 
+                  />
                 ) : (
                   <Camera size={24} className="text-slate-600" />
                 )}
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center rounded-full">
+
+                <div className={`absolute inset-0 flex items-center justify-center rounded-full transition-opacity duration-300 ${avatarUploading ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 bg-black/60'}`}>
                   {avatarUploading 
-                    ? <div className="w-5 h-5 border-2 border-white/20 border-t-white animate-spin rounded-full" />
+                    ? <Loader2 size={20} className="text-white animate-spin" />
                     : <Camera size={18} className="text-white" />
                   }
                 </div>
               </div>
               <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={avatarUploading} />
             </label>
-            <p className="text-[9px] uppercase tracking-[0.2em] text-slate-600">Click to change avatar</p>
+            <p className="text-[9px] uppercase tracking-[0.2em] text-slate-600 font-bold">
+              {avatarUploading ? "Processing..." : "Click to change avatar"}
+            </p>
           </div>
 
           <div>
@@ -216,7 +249,7 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
             className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all cursor-pointer shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
           >
             {isSaving ? (
-              <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-white animate-spin rounded-full" />
+              <Loader2 size={13} className="animate-spin" />
             ) : <Check size={13} />}
             {isSaving ? 'Saving...' : 'Save Changes'}
           </button>

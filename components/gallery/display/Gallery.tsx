@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Artwork, ArtworkCategory, ArtworkType } from '@/components/gallery/types';
@@ -110,16 +111,33 @@ export default function Gallery() {
   });
 
   return (
-    <div className="w-full relative min-h-screen bg-slate-950">
-      
-      <div className="relative bg-slate-950 border-b border-white/5 w-full">
-        <div className="max-w-7xl mx-auto px-6 py-10 flex items-center gap-10">
-          
+    <div id="gallery" className="w-full">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-16">
+        <div className="animate-reveal">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-[0.3em] mb-6">
+            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+            Visual Archive
+          </div>
+          <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-white">
+            Selected Artworks
+          </h2>
+          <p className="text-slate-500 text-sm mt-3 tracking-wide max-w-xl">
+            A curated collection of digital illustrations, character designs, and concepts.
+          </p>
+        </div>
+
+        <div className="text-slate-600 text-[10px] font-black uppercase tracking-widest border-b border-white/5 pb-2">
+          {filteredArt.length} Pieces Found
+        </div>
+      </div>
+
+      <div className="relative bg-white/[0.02] border border-white/5 rounded-3xl p-6 md:p-8 mb-16 shadow-2xl">
+        <div className="flex items-center gap-8">
           {isAdmin && (
             <div className="flex items-center pr-8 border-r border-white/10 shrink-0">
               <button 
                 onClick={() => setManagerConfig({ open: true, type: 'category' })}
-                className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-blue-600 hover:text-white transition-all cursor-pointer text-slate-500 shadow-2xl group"
+                className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-blue-600 hover:text-white transition-all cursor-pointer text-slate-500 group"
               >
                 <span className="text-xl group-hover:scale-110 transition-transform">✎</span>
               </button>
@@ -127,7 +145,6 @@ export default function Gallery() {
           )}
 
           <div className="flex flex-col gap-6 grow overflow-hidden">
-            
             <div 
               ref={scrollRef}
               className="flex items-center gap-10 overflow-x-auto select-none cursor-grab active:cursor-grabbing gallery-scrollbar pb-2"
@@ -155,7 +172,7 @@ export default function Gallery() {
                   onClick={() => setSelectedType(type)} 
                   className={`text-[9px] font-bold uppercase tracking-[0.12em] px-5 py-2 rounded-full transition-all cursor-pointer whitespace-nowrap border shrink-0 ${
                     selectedType === type 
-                    ? 'bg-blue-600/10 border-blue-500/50 text-blue-400' 
+                    ? 'bg-blue-600/10 border-blue-500/50 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.1)]' 
                     : 'border-white/5 bg-white/[0.01] text-slate-500 hover:text-slate-300'
                   }`}
                 >
@@ -164,42 +181,49 @@ export default function Gallery() {
               ))}
             </div>
           </div>
-          
-          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-slate-950 via-slate-950/20 to-transparent pointer-events-none z-10" />
         </div>
       </div>
 
       {isAdmin && (
-        <div className="w-full">
+        <div className="mb-16">
           <StorageMeter refreshTrigger={storageRefresh} />
         </div>
       )}
 
-      <main className="mt-16 max-w-7xl mx-auto px-6 pb-24">
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-10">
+      <main className="w-full">
+        <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
           {isAdmin && (
-            <button 
-              onClick={() => { setEditingArtwork(null); setIsModalOpen(true); }} 
-              className="w-full aspect-video mb-10 rounded-3xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center gap-4 hover:bg-blue-500/[0.03] hover:border-blue-500/20 transition-all group break-inside-avoid cursor-pointer bg-white/[0.01]"
-            >
-              <div className="w-14 h-14 rounded-full border border-blue-500/20 flex items-center justify-center text-blue-500 text-3xl font-light group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                +
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600 group-hover:text-blue-400">Add Artwork</span>
-            </button>
+            <div className="break-inside-avoid mb-8">
+              <button 
+                onClick={() => { setEditingArtwork(null); setIsModalOpen(true); }} 
+                className="w-full aspect-[4/3] rounded-3xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center gap-4 hover:bg-blue-500/[0.03] hover:border-blue-500/20 transition-all group cursor-pointer bg-white/[0.01]"
+              >
+                <div className="w-14 h-14 rounded-full border border-blue-500/20 flex items-center justify-center text-blue-500 text-3xl font-light group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                  +
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600 group-hover:text-blue-400">Upload Art</span>
+              </button>
+            </div>
           )}
 
           {filteredArt.map((art, index) => (
-            <ArtworkCard 
-              key={art.id} 
-              art={art} 
-              isAdmin={isAdmin}
-              onEdit={() => { setEditingArtwork(art); setIsModalOpen(true); }}
-              onClick={() => { setSelectedArtwork(art); setSelectedIndex(index); }}
-              onDelete={() => { fetchArtworks(); setStorageRefresh(n => n + 1); }}
-            />
+            <div key={art.id} className="break-inside-avoid mb-8">
+              <ArtworkCard 
+                art={art} 
+                isAdmin={isAdmin}
+                onEdit={() => { setEditingArtwork(art); setIsModalOpen(true); }}
+                onClick={() => { setSelectedArtwork(art); setSelectedIndex(index); }}
+                onDelete={() => { fetchArtworks(); setStorageRefresh(n => n + 1); }}
+              />
+            </div>
           ))}
         </div>
+
+        {filteredArt.length === 0 && (
+          <div className="py-24 text-center border-2 border-dashed border-white/[0.02] rounded-3xl">
+            <p className="text-slate-600 uppercase tracking-widest text-xs font-bold">No artworks found in this category.</p>
+          </div>
+        )}
       </main>
 
       <MetadataManager 
@@ -232,23 +256,11 @@ export default function Gallery() {
       )}
 
       <style jsx global>{`
-        .gallery-scrollbar::-webkit-scrollbar {
-          height: 2px;
-        }
-        .gallery-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .gallery-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(59, 130, 246, 0.25);
-          border-radius: 999px;
-        }
-        .gallery-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(59, 130, 246, 0.5);
-        }
-        .gallery-scrollbar {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(59, 130, 246, 0.25) transparent;
-        }
+        .gallery-scrollbar::-webkit-scrollbar { height: 2px; }
+        .gallery-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .gallery-scrollbar::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.25); border-radius: 999px; }
+        .gallery-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.5); }
+        .gallery-scrollbar { scrollbar-width: thin; scrollbar-color: rgba(59, 130, 246, 0.25) transparent; }
       `}</style>
     </div>
   );

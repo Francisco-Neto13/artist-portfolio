@@ -6,12 +6,12 @@ import CommissionSection from '@/components/commissions/CommissionSection';
 
 export default function Home() {
   return (
-    <main className="flex-grow">
+    <main className="flex-grow bg-slate-950">
       <div className="animate-reveal delay-1">
         <Hero />
       </div>
       
-      <section className="max-w-6xl mx-auto px-6 pb-24 border-t border-blue-900/20 pt-16">
+      <section className="max-w-7xl mx-auto px-6 pb-24 border-t border-blue-900/20 pt-16">
         <Gallery />
       </section>
 

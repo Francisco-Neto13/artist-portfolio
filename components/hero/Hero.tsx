@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Pencil } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { ProfileData, DEFAULT_PROFILE } from './types';
@@ -34,17 +34,21 @@ export default function Hero() {
     let index = 0;
     setDisplayText('');
     const fullText = profile.full_name || 'Atmisuki.';
+    
     const t = setTimeout(() => {
       const iv = setInterval(() => {
         if (index <= fullText.length) {
           setDisplayText(fullText.slice(0, index));
           index++;
-        } else clearInterval(iv);
+        } else {
+          clearInterval(iv);
+        }
       }, 100);
       return () => clearInterval(iv);
     }, 800);
+    
     return () => clearTimeout(t);
-  }, [profile.full_name]);
+  }, [profile.full_name]); 
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -71,18 +75,25 @@ export default function Hero() {
     setIsEditing(false);
   };
 
+  const onDraftChange = useCallback((newDraft: ProfileData) => {
+    setDraft(newDraft);
+  }, []);
+
   return (
-    <section className="min-h-screen flex flex-col items-center justify-center bg-slate-950 relative px-6 py-16">
+    <section id="home" className="min-h-screen flex flex-col items-center justify-center bg-slate-950 relative px-6 py-16">
 
       <HeroContent
-        profile={isEditing ? draft : profile}
+        profile={profile} 
         displayText={displayText}
         onOpenModal={setActiveModal}
       />
 
       {isAdmin && (
         <button
-          onClick={() => setIsEditing(true)}
+          onClick={() => {
+            setDraft(profile); 
+            setIsEditing(true);
+          }}
           className="mt-10 flex items-center gap-2 px-5 py-2.5 bg-white/[0.03] border border-white/[0.07] hover:border-blue-500/30 hover:bg-blue-500/[0.05] text-slate-500 hover:text-slate-300 rounded-full transition-all cursor-pointer group"
         >
           <Pencil size={12} className="group-hover:text-blue-400 transition-colors" />
@@ -94,7 +105,7 @@ export default function Hero() {
         <EditPanel
           draft={draft}
           isSaving={isSaving}
-          onDraftChange={setDraft}
+          onDraftChange={onDraftChange}
           onSave={handleSave}
           onCancel={handleCancel}
         />
@@ -103,7 +114,7 @@ export default function Hero() {
       {activeModal && (
         <InfoModal
           type={activeModal}
-          profile={isEditing ? draft : profile}
+          profile={profile}
           onClose={() => setActiveModal(null)}
         />
       )}

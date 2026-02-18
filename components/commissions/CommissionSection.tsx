@@ -117,7 +117,7 @@ export default function CommissionSection() {
   };
 
   return (
-    <section className="relative min-h-screen bg-slate-950 border-t border-white/[0.03]">
+    <section id="commissions" className="relative min-h-screen bg-slate-950 border-t border-white/[0.03]">
       <div className="max-w-7xl mx-auto px-6 py-20 md:py-28">
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-16">

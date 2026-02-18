@@ -10,12 +10,16 @@ const extractStoragePath = (url: string): string | null => {
   return url.substring(idx + marker.length);
 };
 
-export function useUploadLogic(onSuccess: () => void, onClose: () => void, editingArtwork?: Artwork | null) {
+export function useUploadLogic(
+  onSuccess: () => void,
+  onClose: () => void,
+  editingArtwork?: Artwork | null
+) {
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isOptimized, setIsOptimized] = useState(false); 
+  const [isOptimized, setIsOptimized] = useState(false);
   const [availableCategories, setAvailableCategories] = useState<ArtworkCategory[]>([]);
   const [availableTypes, setAvailableTypes] = useState<ArtworkType[]>([]);
   const [formData, setFormData] = useState({ title: '', category: '', type: '' });
@@ -23,13 +27,15 @@ export function useUploadLogic(onSuccess: () => void, onClose: () => void, editi
   const fetchMetadata = useCallback(async () => {
     const [catRes, typeRes] = await Promise.all([
       supabase.from('artwork_categories').select('*').order('name'),
-      supabase.from('artwork_types').select('*').order('name')
+      supabase.from('artwork_types').select('*').order('name'),
     ]);
     if (catRes.data) setAvailableCategories(catRes.data);
     if (typeRes.data) setAvailableTypes(typeRes.data);
   }, []);
 
-  useEffect(() => { fetchMetadata(); }, [fetchMetadata]);
+  useEffect(() => {
+    fetchMetadata();
+  }, [fetchMetadata]);
 
   const resetForm = useCallback(() => {
     setFile(null);
@@ -47,20 +53,80 @@ export function useUploadLogic(onSuccess: () => void, onClose: () => void, editi
     const img = new Image();
     img.src = url;
     img.onload = () => {
-      if (img.width > 2048 || img.height > 2048) {
-        setIsOptimized(true);
-      } else {
-        setIsOptimized(false);
-      }
+      setIsOptimized(img.width > 2048 || img.height > 2048);
     };
   }, []);
 
-  const addItem = async (table: 'artwork_categories' | 'artwork_types', name: string) => {
+  const handleUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.category || !formData.type) return;
+
+    setLoading(true);
+    setUploadProgress(5);
+
+    try {
+      let publicUrl = editingArtwork?.image_url || '';
+
+      if (file) {
+        setUploadProgress(10);
+        const { blob } = await convertToWebP(file);
+
+        setUploadProgress(40);
+        const fileName = `${Math.random()}-${Date.now()}.webp`;
+
+        const { error: upErr } = await supabase.storage
+          .from('gallery')
+          .upload(`artworks/${fileName}`, blob);
+
+        if (upErr) throw upErr;
+
+        if (editingArtwork?.image_url) {
+          const oldPath = extractStoragePath(editingArtwork.image_url);
+          if (oldPath) await supabase.storage.from('gallery').remove([oldPath]);
+        }
+
+        const { data } = supabase.storage
+          .from('gallery')
+          .getPublicUrl(`artworks/${fileName}`);
+        publicUrl = data.publicUrl;
+      }
+
+      setUploadProgress(85);
+      const payload = { ...formData, image_url: publicUrl };
+
+      const { error } = editingArtwork
+        ? await supabase.from('artworks').update(payload).eq('id', editingArtwork.id)
+        : await supabase.from('artworks').insert([payload]);
+
+      if (error) throw error;
+
+      setUploadProgress(100);
+
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      onSuccess();
+      onClose();
+    } catch (err) {
+      console.error('Upload failed:', err);
+      setUploadProgress(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addItem = async (
+    table: 'artwork_categories' | 'artwork_types',
+    name: string
+  ) => {
     const { error } = await supabase.from(table).insert([{ name }]);
     if (!error) fetchMetadata();
   };
 
-  const removeItem = async (table: 'artwork_categories' | 'artwork_types', id: string, name: string) => {
+  const removeItem = async (
+    table: 'artwork_categories' | 'artwork_types',
+    id: string,
+    name: string
+  ) => {
     const column = table === 'artwork_categories' ? 'category' : 'type';
     const { count } = await supabase
       .from('artworks')
@@ -72,67 +138,21 @@ export function useUploadLogic(onSuccess: () => void, onClose: () => void, editi
     fetchMetadata();
   };
 
-  const handleUpload = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.category || !formData.type) return;
-
-    setLoading(true);
-    try {
-      let publicUrl = editingArtwork?.image_url || '';
-
-      if (file) {
-        setUploadProgress(30);
-        const { blob } = await convertToWebP(file);
-        const fileName = `${Math.random()}-${Date.now()}.webp`;
-
-        const { error: upErr } = await supabase.storage
-          .from('gallery')
-          .upload(`artworks/${fileName}`, blob);
-        if (upErr) throw upErr;
-
-        if (editingArtwork?.image_url) {
-          const oldPath = extractStoragePath(editingArtwork.image_url);
-          if (oldPath) await supabase.storage.from('gallery').remove([oldPath]);
-        }
-
-        const { data } = supabase.storage.from('gallery').getPublicUrl(`artworks/${fileName}`);
-        publicUrl = data.publicUrl;
-      }
-
-      setUploadProgress(80);
-      const payload = { ...formData, image_url: publicUrl };
-
-      const { error } = editingArtwork
-        ? await supabase.from('artworks').update(payload).eq('id', editingArtwork.id)
-        : await supabase.from('artworks').insert([payload]);
-
-      if (error) throw error;
-
-      setUploadProgress(100);
-      onSuccess();
-      onClose();
-    } catch (err) {
-      console.error('Upload failed:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return {
-    file, 
+    file,
     handleFileChange,
-    previewUrl, 
-    setPreviewUrl, 
+    previewUrl,
+    setPreviewUrl,
     isOptimized,
-    formData, 
+    formData,
     setFormData,
-    loading, 
-    uploadProgress, 
-    handleUpload, 
+    loading,
+    uploadProgress,
+    handleUpload,
     resetForm,
-    availableCategories, 
-    availableTypes, 
-    addItem, 
-    removeItem
+    availableCategories,
+    availableTypes,
+    addItem,
+    removeItem,
   };
 }

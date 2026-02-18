@@ -1,9 +1,8 @@
 "use client";
-
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 export default function FPSMeter() {
-  const [fps, setFps] = useState(0);
+  const spanRef = useRef<HTMLSpanElement>(null);
   const frameCount = useRef(0);
   const lastTime = useRef(performance.now());
 
@@ -14,9 +13,16 @@ export default function FPSMeter() {
       frameCount.current++;
 
       if (time >= lastTime.current + 1000) {
-        setFps(frameCount.current);
+        const fps = frameCount.current;
         frameCount.current = 0;
         lastTime.current = time;
+
+        if (spanRef.current) {
+          spanRef.current.textContent = `${fps} FPS`;
+          spanRef.current.className = `font-mono text-sm ${
+            fps >= 55 ? "text-green-400" : fps >= 30 ? "text-yellow-400" : "text-red-400"
+          }`;
+        }
       }
 
       animationId = requestAnimationFrame(loop);
@@ -26,17 +32,11 @@ export default function FPSMeter() {
     return () => cancelAnimationFrame(animationId);
   }, []);
 
-  const getColor = () => {
-    if (fps >= 55) return "text-green-400";
-    if (fps >= 30) return "text-yellow-400";
-    return "text-red-400";
-  };
-
   return (
     <div className="fixed bottom-4 right-4 z-[9999] pointer-events-none select-none">
       <div className="bg-black/70 backdrop-blur px-3 py-2 rounded-lg border border-white/10 shadow-lg">
-        <span className={`font-mono text-sm ${getColor()}`}>
-          {fps} FPS
+        <span ref={spanRef} className="font-mono text-sm text-green-400">
+          -- FPS
         </span>
       </div>
     </div>

@@ -34,17 +34,23 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   const isLoginPage = request.nextUrl.pathname === '/login';
+  const isDashboardPage = request.nextUrl.pathname === '/dashboard'; 
   const isResetPage = request.nextUrl.pathname === '/auth/reset-password';
   const hasRecoveryCode = request.nextUrl.searchParams.has('code');
 
   if (user) {
     if (isLoginPage || (isResetPage && !hasRecoveryCode)) {
-      return NextResponse.redirect(new URL('/', request.url));
+      return NextResponse.redirect(new URL('/dashboard', request.url)); 
     }
   }
 
-  if (!user && isResetPage && !hasRecoveryCode) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  if (!user) {
+    if (isDashboardPage) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    if (isResetPage && !hasRecoveryCode) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
   }
 
   return response;
@@ -52,8 +58,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/login',
-    '/auth/reset-password',
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

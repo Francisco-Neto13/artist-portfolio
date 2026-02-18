@@ -13,7 +13,7 @@ interface CommissionCardProps {
 
 export default function CommissionCard({ commission, isAdmin, onEdit, onDelete }: CommissionCardProps) {
   return (
-    <div className="group relative flex flex-col bg-gradient-to-b from-slate-900/60 to-slate-900/40 border border-white/[0.06] rounded-3xl overflow-hidden hover:border-blue-500/30 transition-all duration-500 shadow-2xl">
+    <div className="group relative flex flex-col bg-gradient-to-b from-slate-900/60 to-slate-900/40 border border-white/[0.06] rounded-3xl overflow-hidden hover:border-blue-500/30 transition-all duration-500 shadow-2xl h-full">
       
       {isAdmin && (
         <div className="absolute top-4 right-4 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
@@ -32,7 +32,7 @@ export default function CommissionCard({ commission, isAdmin, onEdit, onDelete }
         </div>
       )}
 
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-950">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-950 shrink-0">
         {commission.image_url ? (
           <Image 
             src={commission.image_url} 
@@ -52,16 +52,18 @@ export default function CommissionCard({ commission, isAdmin, onEdit, onDelete }
       <div className="p-8 flex flex-col flex-grow relative">
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
 
-        <div className="flex justify-between items-start mb-4 gap-4">
+        <div className="flex justify-between items-start mb-4 gap-4 shrink-0">
           <h3 className="text-xl font-bold text-white tracking-tight">{commission.title}</h3>
           <div className="shrink-0 px-3 py-1 bg-blue-600/10 border border-blue-500/20 rounded-lg">
             <span className="text-blue-400 font-black text-sm tracking-wide">${commission.price}</span>
           </div>
         </div>
 
-        <p className="text-slate-400 text-sm leading-relaxed whitespace-pre-line">
-          {commission.description}
-        </p>
+        <div className="flex-grow">
+          <p className="text-slate-400 text-sm leading-relaxed whitespace-pre-wrap break-words">
+            {commission.description}
+          </p>
+        </div>
       </div>
     </div>
   );

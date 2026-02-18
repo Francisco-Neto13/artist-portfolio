@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Instagram, Twitter, Mail, ArrowUpRight } from 'lucide-react'; 
 import { Commission, CommissionStatus } from './types';
 import CommissionCard from './CommissionCard';
 import StatusBadge from './StatusBadge';
@@ -11,6 +11,7 @@ import EditCommissionModal from './EditCommissionModal';
 export default function CommissionSection() {
   const [commissions, setCommissions] = useState<Commission[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [socialLinks, setSocialLinks] = useState<{instagram: string, twitter: string, mail: string} | null>(null);
 
   const [status, setStatus] = useState<CommissionStatus>('open');
   const [editingCommission, setEditingCommission] = useState<Commission | null>(null);
@@ -34,17 +35,21 @@ export default function CommissionSection() {
   };
 
   const fetchData = async () => {
-    const { data } = await supabase
+    const { data: tiers } = await supabase
       .from('commission_tiers')
       .select('*')
       .order('order_index', { ascending: true });
-    if (data) setCommissions(data);
+    if (tiers) setCommissions(tiers);
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('commission_status')
+      .select('commission_status, social_links')
       .single();
-    if (profile?.commission_status) setStatus(profile.commission_status);
+    
+    if (profile) {
+      if (profile.commission_status) setStatus(profile.commission_status);
+      if (profile.social_links) setSocialLinks(profile.social_links);
+    }
   };
 
   const handleAdd = async () => {
@@ -154,28 +159,56 @@ export default function CommissionSection() {
           ))}
         </div>
 
-        <div className="mt-24 text-center">
-          <div className="inline-block mb-6">
-            <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-600 mb-2">
-              Ready to Order?
+        <div className="mt-32 text-center max-w-2xl mx-auto">
+          <div className="inline-block mb-10">
+            <p className="text-[10px] font-black uppercase tracking-[0.5em] text-blue-500 mb-4">
+              Get in Touch
             </p>
-            <div className="h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
+            <h3 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+              Ready to start your commission?
+            </h3>
+            <div className="h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent mt-6" />
           </div>
 
           <div className="flex flex-wrap justify-center gap-4">
-            <a 
-              href="/contact" 
-              className="px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-[0.25em] rounded-full transition-all shadow-lg shadow-blue-500/20 cursor-pointer"
-            >
-              Order via Form
-            </a>
-            <a 
-              href="mailto:contact@example.com" 
-              className="px-8 py-3.5 border border-white/10 hover:border-blue-500/30 hover:bg-blue-500/[0.05] text-slate-300 hover:text-white font-black text-[10px] uppercase tracking-[0.25em] rounded-full transition-all cursor-pointer"
-            >
-              Direct Email
-            </a>
+            {socialLinks?.instagram && socialLinks.instagram !== '#' && (
+              <a 
+                href={socialLinks.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-6 py-3.5 bg-white/[0.03] border border-white/10 hover:border-pink-500/40 hover:bg-pink-500/5 text-slate-300 hover:text-white rounded-2xl transition-all cursor-pointer group"
+              >
+                <Instagram size={16} className="text-slate-500 group-hover:text-pink-500 transition-colors" />
+                <span className="font-black text-[10px] uppercase tracking-[0.2em]">Instagram</span>
+              </a>
+            )}
+
+            {socialLinks?.twitter && socialLinks.twitter !== '#' && (
+              <a 
+                href={socialLinks.twitter}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-6 py-3.5 bg-white/[0.03] border border-white/10 hover:border-blue-400/40 hover:bg-blue-400/5 text-slate-300 hover:text-white rounded-2xl transition-all cursor-pointer group"
+              >
+                <Twitter size={16} className="text-slate-500 group-hover:text-blue-400 transition-colors" />
+                <span className="font-black text-[10px] uppercase tracking-[0.2em]">Twitter / X</span>
+              </a>
+            )}
+
+            {socialLinks?.mail && socialLinks.mail !== '#' && (
+              <a 
+                href={`mailto:${socialLinks.mail}`}
+                className="flex items-center gap-3 px-6 py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl transition-all cursor-pointer shadow-lg shadow-blue-500/20 group"
+              >
+                <Mail size={16} className="group-hover:scale-110 transition-transform" />
+                <span className="font-black text-[10px] uppercase tracking-[0.2em]">Send Email</span>
+              </a>
+            )}
           </div>
+          
+          <p className="text-[9px] font-bold text-slate-600 uppercase tracking-[0.3em] mt-10">
+            Typically responds within 24-48 hours
+          </p>
         </div>
       </div>
 

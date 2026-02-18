@@ -19,11 +19,6 @@ export default function Navbar() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.reload();
-  };
-
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     const element = document.getElementById(id);
@@ -77,13 +72,18 @@ export default function Navbar() {
 
           <div className="w-px h-5 bg-gradient-to-b from-transparent via-white/20 to-transparent mx-2" />
 
+          {/* Lógica de Botão Dinâmico */}
           {isAdmin ? (
-            <button
-              onClick={handleLogout}
-              className="px-5 py-2 border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all duration-500 cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.1)]"
+            <Link 
+              href="/dashboard"
+              className="group flex items-center gap-2 px-5 py-2 border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-600 hover:border-blue-500 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all duration-500 cursor-pointer"
             >
-              Logout
-            </button>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              </span>
+              Dashboard
+            </Link>
           ) : (
             <Link 
               href="/login"

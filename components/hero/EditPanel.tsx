@@ -48,7 +48,7 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
 
     setAvatarUploading(true);
     try {
-      const { blob } = await convertToWebP(file);
+      const { blob } = await convertToWebP(file, 500);
 
       if (draft.avatar_url && draft.avatar_url.includes('perfil')) {
         const oldFileName = draft.avatar_url.split('/').pop()?.split('?')[0];
@@ -89,7 +89,7 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
     <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={onCancel} />
 
-      <div className="relative w-full max-md bg-slate-900 border border-white/[0.06] rounded-2xl flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 max-h-[85vh]">
+      <div className="relative w-full max-w-md bg-slate-900 border border-white/[0.06] rounded-2xl flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 max-h-[85vh]">
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent rounded-t-2xl" />
 
         <div className="flex items-center justify-between px-6 pt-6 pb-5 border-b border-white/[0.05] shrink-0">
@@ -113,8 +113,9 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
                     src={draft.avatar_url} 
                     alt="Avatar" 
                     fill 
+                    priority 
+                    sizes="80px" 
                     className={`object-cover transition-all duration-500 ${avatarUploading ? 'blur-sm scale-110' : ''}`} 
-                    unoptimized 
                   />
                 ) : (
                   <Camera size={24} className="text-slate-600" />

@@ -47,14 +47,15 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
         }
       }
 
-      const { blob } = await convertToWebP(file);
+      const { blob } = await convertToWebP(file, 1000); 
       const fileName = `commission-${Date.now()}.webp`;
 
       const { error: upErr } = await supabase.storage
         .from('gallery')
         .upload(`commissions/${fileName}`, blob, {
           cacheControl: '31536000',
-          upsert: false
+          upsert: false,
+          contentType: 'image/webp'
         });
 
       if (upErr) throw upErr;
@@ -102,10 +103,11 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
                 <div className="aspect-[4/3] w-full rounded-xl overflow-hidden bg-slate-950 border border-white/[0.06] relative flex items-center justify-center">
                   {draft.image_url ? (
                     <Image 
-                      src={getOptimizedUrl(draft.image_url, 85, 800)} 
+                      src={getOptimizedUrl(draft.image_url, 82, 800)} 
                       alt="Preview" 
                       fill 
                       className="object-cover" 
+                      sizes="(max-width: 768px) 100vw, 800px"
                     />
                   ) : (
                     <ImageIcon size={48} className="text-slate-800" />

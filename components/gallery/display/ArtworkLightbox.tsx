@@ -39,7 +39,7 @@ export default function ArtworkLightbox({ artwork, index, total, onClose, onNavi
             onClick={onClose} 
             className="pointer-events-auto flex items-center gap-2 px-3 py-2 bg-slate-950/80 hover:bg-red-500/20 border border-white/10 rounded-lg text-slate-300 hover:text-white transition-all cursor-pointer backdrop-blur-md"
           >
-            <span className="text-[10px] uppercase tracking-widest font-bold">Fechar</span>
+            <span className="text-[10px] uppercase tracking-widest font-bold">Close</span>
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>

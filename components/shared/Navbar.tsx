@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { Menu, X } from 'lucide-react'; 
 
 export default function Navbar() {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -21,6 +23,7 @@ export default function Navbar() {
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
+    setIsOpen(false); 
     const element = document.getElementById(id);
     if (element) {
       const offset = 80;
@@ -72,16 +75,11 @@ export default function Navbar() {
 
           <div className="w-px h-5 bg-gradient-to-b from-transparent via-white/20 to-transparent mx-2" />
 
-          {/* Lógica de Botão Dinâmico */}
           {isAdmin ? (
             <Link 
               href="/dashboard"
               className="group flex items-center gap-2 px-5 py-2 border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-600 hover:border-blue-500 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all duration-500 cursor-pointer"
             >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-              </span>
               Dashboard
             </Link>
           ) : (
@@ -93,7 +91,45 @@ export default function Navbar() {
             </Link>
           )}
         </div>
+
+        <button 
+          className="md:hidden text-slate-400 hover:text-white transition-colors"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          {isOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </div>
+
+      {isOpen && (
+        <div className="md:hidden absolute top-full left-0 w-full bg-slate-950 border-b border-white/5 animate-in slide-in-from-top duration-300">
+          <div className="flex flex-col p-6 gap-6">
+            <a 
+              href="#gallery" 
+              onClick={(e) => scrollToSection(e, 'gallery')}
+              className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400"
+            >
+              Gallery
+            </a>
+            <a 
+              href="#commissions" 
+              onClick={(e) => scrollToSection(e, 'commissions')}
+              className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400"
+            >
+              Commissions
+            </a>
+            <div className="h-px w-full bg-white/5" />
+            {isAdmin ? (
+              <Link href="/dashboard" className="text-blue-400 text-[11px] font-black uppercase tracking-widest">
+                Dashboard
+              </Link>
+            ) : (
+              <Link href="/login" className="text-slate-400 text-[11px] font-black uppercase tracking-widest">
+                Admin Login
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

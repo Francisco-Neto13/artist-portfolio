@@ -25,14 +25,25 @@ self.onmessage = async (event) => {
     }
 
     const canvas = new OffscreenCanvas(width, height);
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { 
+      alpha: true, // Garante suporte a transparência se necessário
+      desynchronized: true // Melhora performance no Worker
+    });
+
     if (!ctx) throw new Error('Could not get canvas context.');
 
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
+    ctx.imageSmoothingQuality = 'medium'; 
+    
+    ctx.clearRect(0, 0, width, height);
     ctx.drawImage(bitmap, 0, 0, width, height);
 
-    const blob = await canvas.convertToBlob({ type: 'image/webp', quality });
+    const finalQuality = quality; 
+
+    const blob = await canvas.convertToBlob({ 
+      type: 'image/webp', 
+      quality: finalQuality 
+    });
 
     self.postMessage({ id, status: 'success', blob, wasResized });
   } catch (err) {

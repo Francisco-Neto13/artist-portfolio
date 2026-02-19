@@ -50,12 +50,10 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
     try {
       const { blob } = await convertToWebP(file);
 
-      if (draft.avatar_url && draft.avatar_url.includes('supabase.co')) {
-        const oldFileName = draft.avatar_url.split('/').pop();
+      if (draft.avatar_url && draft.avatar_url.includes('perfil')) {
+        const oldFileName = draft.avatar_url.split('/').pop()?.split('?')[0];
         if (oldFileName) {
-          await supabase.storage
-            .from('perfil')
-            .remove([oldFileName]);
+          await supabase.storage.from('perfil').remove([oldFileName]);
         }
       }
 
@@ -64,8 +62,9 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
       const { error: upErr } = await supabase.storage
         .from('perfil')
         .upload(fileName, blob, { 
-          upsert: true,
-          contentType: 'image/webp'
+          upsert: false, 
+          contentType: 'image/webp',
+          cacheControl: '31536000' 
         });
 
       if (upErr) throw upErr;
@@ -90,7 +89,7 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
     <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={onCancel} />
 
-      <div className="relative w-full max-w-md bg-slate-900 border border-white/[0.06] rounded-2xl flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 max-h-[85vh]">
+      <div className="relative w-full max-md bg-slate-900 border border-white/[0.06] rounded-2xl flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 max-h-[85vh]">
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent rounded-t-2xl" />
 
         <div className="flex items-center justify-between px-6 pt-6 pb-5 border-b border-white/[0.05] shrink-0">

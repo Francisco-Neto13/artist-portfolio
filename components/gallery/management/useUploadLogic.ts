@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Artwork, ArtworkCategory, ArtworkType } from '../types';
-import { convertToWebP } from '@/lib/imageUtils';
+import { convertToWebP } from '@/lib/imageUtils'; 
 
 const extractStoragePath = (url: string): string | null => {
   const marker = '/gallery/';
@@ -69,6 +69,7 @@ export function useUploadLogic(
 
       if (file) {
         setUploadProgress(10);
+        
         const { blob } = await convertToWebP(file);
 
         setUploadProgress(40);
@@ -76,7 +77,10 @@ export function useUploadLogic(
 
         const { error: upErr } = await supabase.storage
           .from('gallery')
-          .upload(`artworks/${fileName}`, blob);
+          .upload(`artworks/${fileName}`, blob, {
+            cacheControl: '31536000',
+            upsert: false
+          });
 
         if (upErr) throw upErr;
 
@@ -101,7 +105,6 @@ export function useUploadLogic(
       if (error) throw error;
 
       setUploadProgress(100);
-
       await new Promise(resolve => setTimeout(resolve, 300));
 
       onSuccess();
@@ -114,19 +117,12 @@ export function useUploadLogic(
     }
   };
 
-  const addItem = async (
-    table: 'artwork_categories' | 'artwork_types',
-    name: string
-  ) => {
+  const addItem = async (table: 'artwork_categories' | 'artwork_types', name: string) => {
     const { error } = await supabase.from(table).insert([{ name }]);
     if (!error) fetchMetadata();
   };
 
-  const removeItem = async (
-    table: 'artwork_categories' | 'artwork_types',
-    id: string,
-    name: string
-  ) => {
+  const removeItem = async (table: 'artwork_categories' | 'artwork_types', id: string, name: string) => {
     const column = table === 'artwork_categories' ? 'category' : 'type';
     const { count } = await supabase
       .from('artworks')
@@ -139,20 +135,8 @@ export function useUploadLogic(
   };
 
   return {
-    file,
-    handleFileChange,
-    previewUrl,
-    setPreviewUrl,
-    isOptimized,
-    formData,
-    setFormData,
-    loading,
-    uploadProgress,
-    handleUpload,
-    resetForm,
-    availableCategories,
-    availableTypes,
-    addItem,
-    removeItem,
+    file, handleFileChange, previewUrl, setPreviewUrl, isOptimized,
+    formData, setFormData, loading, uploadProgress, handleUpload,
+    resetForm, availableCategories, availableTypes, addItem, removeItem,
   };
 }

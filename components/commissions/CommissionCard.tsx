@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { Pencil, Trash2, Image as ImageIcon } from 'lucide-react';
 import { Commission } from './types';
+import { getOptimizedUrl } from '@/lib/imageUtils'; 
 
 interface CommissionCardProps {
   commission: Commission;
@@ -35,11 +36,10 @@ export default function CommissionCard({ commission, isAdmin, onEdit, onDelete }
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-950 shrink-0">
         {commission.image_url ? (
           <Image 
-            src={commission.image_url} 
+            src={getOptimizedUrl(commission.image_url, 85, 800)} 
             alt={commission.title} 
             fill 
             className="object-cover group-hover:scale-105 transition-transform duration-700" 
-            unoptimized
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-slate-900">

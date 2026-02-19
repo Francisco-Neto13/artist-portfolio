@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom'; 
 import { supabase } from '@/lib/supabase';
-import { Plus, Instagram, Twitter, Mail, ArrowUpRight } from 'lucide-react'; 
+import { Plus, Instagram, Twitter, Mail } from 'lucide-react'; 
 import { Commission, CommissionStatus } from './types';
 import CommissionCard from './CommissionCard';
 import StatusBadge from './StatusBadge';
@@ -220,7 +221,7 @@ export default function CommissionSection() {
         />
       )}
 
-      {deletingId && (
+      {deletingId && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setDeletingId(null)} />
           <div 
@@ -248,7 +249,8 @@ export default function CommissionSection() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[700] flex flex-col gap-2 items-center pointer-events-none">

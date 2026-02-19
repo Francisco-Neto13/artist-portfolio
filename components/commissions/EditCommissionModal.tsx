@@ -3,45 +3,10 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { X, Check, Trash2, Upload, Camera, Image as ImageIcon } from 'lucide-react';
+import { X, Check, Camera, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Commission, DESCRIPTION_MAX } from './types';
-
-async function convertToWebP(file: File): Promise<Blob> {
-  const MAX_SIZE = 25 * 1024 * 1024;
-  if (file.size > MAX_SIZE) throw new Error('File too large (max 25MB)');
-  
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (e) => {
-      const img = new window.Image();
-      img.src = e.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_DIM = 4096;
-        let { width, height } = img;
-        if (width > MAX_DIM || height > MAX_DIM) {
-          const ratio = Math.min(MAX_DIM / width, MAX_DIM / height);
-          width = Math.round(width * ratio);
-          height = Math.round(height * ratio);
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return reject(new Error('Canvas context failed'));
-        ctx.drawImage(img, 0, 0, width, height);
-        canvas.toBlob(
-          (blob) => blob ? resolve(blob) : reject(new Error('WebP conversion failed')),
-          'image/webp',
-          0.82
-        );
-      };
-      img.onerror = () => reject(new Error('Image load failed'));
-    };
-    reader.onerror = () => reject(new Error('File read failed'));
-  });
-}
+import { convertToWebP, getOptimizedUrl } from '@/lib/imageUtils'; 
 
 interface EditCommissionModalProps {
   commission: Commission | null;
@@ -53,7 +18,6 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
   const [draft, setDraft] = useState<Partial<Commission>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-
 
   useEffect(() => {
     if (commission) {
@@ -71,6 +35,7 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     setIsUploading(true);
     try {
       if (draft.image_url) {
@@ -82,14 +47,20 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
         }
       }
 
-      const webpBlob = await convertToWebP(file);
+      const { blob } = await convertToWebP(file);
       const fileName = `commission-${Date.now()}.webp`;
+
       const { error: upErr } = await supabase.storage
         .from('gallery')
-        .upload(`commissions/${fileName}`, webpBlob);
+        .upload(`commissions/${fileName}`, blob, {
+          cacheControl: '31536000',
+          upsert: false
+        });
+
       if (upErr) throw upErr;
+
       const { data } = supabase.storage.from('gallery').getPublicUrl(`commissions/${fileName}`);
-      setDraft({ ...draft, image_url: data.publicUrl });
+      setDraft(prev => ({ ...prev, image_url: data.publicUrl }));
     } catch (err: any) {
       console.error('Upload failed:', err.message);
     } finally {
@@ -124,23 +95,30 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(59,130,246,0.2) transparent' }}>
-
           <div>
             <label className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500 block mb-3">Example Image</label>
             <div className="relative group">
               <label className="cursor-pointer block">
                 <div className="aspect-[4/3] w-full rounded-xl overflow-hidden bg-slate-950 border border-white/[0.06] relative flex items-center justify-center">
                   {draft.image_url ? (
-                    <Image src={draft.image_url} alt="Preview" fill className="object-cover" unoptimized />
+                    <Image 
+                      src={getOptimizedUrl(draft.image_url, 85, 800)} 
+                      alt="Preview" 
+                      fill 
+                      className="object-cover" 
+                    />
                   ) : (
                     <ImageIcon size={48} className="text-slate-800" />
                   )}
                   {isUploading && (
-                    <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
-                      <svg className="w-8 h-8 text-blue-400 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
+                    <div className="absolute inset-0 bg-black/80 flex items-center justify-center backdrop-blur-sm">
+                      <div className="flex flex-col items-center gap-2">
+                        <svg className="w-8 h-8 text-blue-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        <span className="text-[8px] text-blue-400 font-bold uppercase tracking-widest">Optimizing</span>
+                      </div>
                     </div>
                   )}
                   {!isUploading && (
@@ -189,14 +167,7 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
               onChange={(e) => setDraft({ ...draft, description: e.target.value })}
               placeholder="What's included in this tier..."
             />
-            {(draft.description?.length || 0) >= DESCRIPTION_MAX * 0.9 && (
-              <p className="text-[9px] text-amber-500/80 mt-1">
-                {DESCRIPTION_MAX - (draft.description?.length || 0)} characters remaining
-              </p>
-            )}
           </div>
-
-
         </div>
 
         <div className="px-6 py-5 border-t border-white/[0.05] flex gap-2 shrink-0">
@@ -212,10 +183,12 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
             disabled={isSaving || (draft.description?.length || 0) > DESCRIPTION_MAX}
             className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all cursor-pointer shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
           >
-            {isSaving
-              ? <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-              : <Check size={13} />
-            }
+            {isSaving ? (
+              <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : <Check size={13} />}
             {isSaving ? 'Saving...' : 'Save'}
           </button>
         </div>

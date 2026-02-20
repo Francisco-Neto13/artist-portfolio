@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect, useCallback } from 'react';
 import { Pencil } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -16,6 +15,7 @@ export default function Hero() {
   const [displayText, setDisplayText] = useState('');
   const [profile, setProfile] = useState<ProfileData>(DEFAULT_PROFILE);
   const [draft, setDraft] = useState<ProfileData>(DEFAULT_PROFILE);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -26,17 +26,21 @@ export default function Hero() {
         setProfile(data);
         setDraft(data);
       }
+      setProfileLoaded(true);
     };
     load();
   }, []);
 
   useEffect(() => {
+    if (!profileLoaded) return;
+
     let index = 0;
+    let iv: ReturnType<typeof setInterval>;
     setDisplayText('');
-    const fullText = profile.full_name || 'Atmisuki.';
-    
+    const fullText = profile.full_name || 'Atmisuki!';
+
     const t = setTimeout(() => {
-      const iv = setInterval(() => {
+      iv = setInterval(() => {
         if (index <= fullText.length) {
           setDisplayText(fullText.slice(0, index));
           index++;
@@ -44,11 +48,13 @@ export default function Hero() {
           clearInterval(iv);
         }
       }, 100);
-      return () => clearInterval(iv);
     }, 800);
-    
-    return () => clearTimeout(t);
-  }, [profile.full_name]); 
+
+    return () => {
+      clearTimeout(t);
+      clearInterval(iv);
+    };
+  }, [profile.full_name, profileLoaded]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -81,17 +87,15 @@ export default function Hero() {
 
   return (
     <section id="home" className="min-h-screen flex flex-col items-center justify-center bg-slate-950 relative px-6 py-16">
-
       <HeroContent
-        profile={profile} 
+        profile={profile}
         displayText={displayText}
         onOpenModal={setActiveModal}
       />
-
       {isAdmin && (
         <button
           onClick={() => {
-            setDraft(profile); 
+            setDraft(profile);
             setIsEditing(true);
           }}
           className="mt-10 flex items-center gap-2 px-5 py-2.5 bg-white/[0.03] border border-white/[0.07] hover:border-blue-500/30 hover:bg-blue-500/[0.05] text-slate-500 hover:text-slate-300 rounded-full transition-all cursor-pointer group"
@@ -100,7 +104,6 @@ export default function Hero() {
           <span className="text-[9px] font-black uppercase tracking-[0.25em]">Edit Profile</span>
         </button>
       )}
-
       {isAdmin && isEditing && (
         <EditPanel
           draft={draft}
@@ -110,7 +113,6 @@ export default function Hero() {
           onCancel={handleCancel}
         />
       )}
-
       {activeModal && (
         <InfoModal
           type={activeModal}

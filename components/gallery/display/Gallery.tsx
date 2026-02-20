@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Artwork, ArtworkCategory, ArtworkType } from '@/components/gallery/types';
 import UploadModal from '@/components/gallery/management/UploadModal';
-import MetadataManager from '@/components/gallery/management/MetadataManager'; 
+import MetadataManager from '@/components/gallery/management/MetadataManager';
 import ArtworkCard from '@/components/gallery/display/ArtworkCard';
 import ArtworkLightbox from '@/components/gallery/display/ArtworkLightbox';
 import StorageMeter from '@/components/gallery/management/StorageMeter';
@@ -13,6 +13,7 @@ export default function Gallery() {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [selectedType, setSelectedType] = useState('All Themes');
+  const [searchQuery, setSearchQuery] = useState('');
   const [dbCategories, setDbCategories] = useState<ArtworkCategory[]>([]);
   const [dbTypes, setDbTypes] = useState<ArtworkType[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -20,8 +21,7 @@ export default function Gallery() {
   const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [managerConfig, setManagerConfig] = useState<{ open: boolean, type: 'category' | 'theme' }>({ open: false, type: 'category' });
-
+  const [managerConfig, setManagerConfig] = useState<{ open: boolean; type: 'category' | 'theme' }>({ open: false, type: 'category' });
   const [storageRefresh, setStorageRefresh] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -64,14 +64,20 @@ export default function Gallery() {
     return count ?? 0;
   };
 
+  const filteredArt = artworks.filter(art => {
+    const catMatch = selectedCategory === 'All Categories' || art.category === selectedCategory;
+    const typeMatch = selectedType === 'All Themes' || art.type === selectedType;
+    const searchMatch = searchQuery.trim() === '' || (
+      art.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      art.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      art.type?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    return catMatch && typeMatch && searchMatch;
+  });
+
   const handleNavigate = (direction: 'prev' | 'next') => {
-    const filteredArt = artworks.filter(art => {
-      const catMatch = selectedCategory === 'All Categories' || art.category === selectedCategory;
-      const typeMatch = selectedType === 'All Themes' || art.type === selectedType;
-      return catMatch && typeMatch;
-    });
-    const newIndex = direction === 'next' 
-      ? (selectedIndex + 1) % filteredArt.length 
+    const newIndex = direction === 'next'
+      ? (selectedIndex + 1) % filteredArt.length
       : (selectedIndex - 1 + filteredArt.length) % filteredArt.length;
     setSelectedIndex(newIndex);
     setSelectedArtwork(filteredArt[newIndex]);
@@ -83,7 +89,12 @@ export default function Gallery() {
     let isDown = false;
     let startX: number;
     let scrollLeft: number;
-    const mDown = (e: MouseEvent) => { isDown = true; startX = e.pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; };
+
+    const mDown = (e: MouseEvent) => {
+      isDown = true;
+      startX = e.pageX - slider.offsetLeft;
+      scrollLeft = slider.scrollLeft;
+    };
     const mLeave = () => { isDown = false; };
     const mUp = () => { isDown = false; };
     const mMove = (e: MouseEvent) => {
@@ -92,10 +103,12 @@ export default function Gallery() {
       const x = e.pageX - slider.offsetLeft;
       slider.scrollLeft = scrollLeft - (x - startX) * 2;
     };
+
     slider.addEventListener('mousedown', mDown);
     slider.addEventListener('mouseleave', mLeave);
     slider.addEventListener('mouseup', mUp);
     slider.addEventListener('mousemove', mMove);
+
     return () => {
       slider.removeEventListener('mousedown', mDown);
       slider.removeEventListener('mouseleave', mLeave);
@@ -103,12 +116,6 @@ export default function Gallery() {
       slider.removeEventListener('mousemove', mMove);
     };
   }, []);
-
-  const filteredArt = artworks.filter(art => {
-    const catMatch = selectedCategory === 'All Categories' || art.category === selectedCategory;
-    const typeMatch = selectedType === 'All Themes' || art.type === selectedType;
-    return catMatch && typeMatch;
-  });
 
   return (
     <div id="gallery" className="w-full">
@@ -125,17 +132,13 @@ export default function Gallery() {
             A curated collection of digital illustrations, character designs, and concepts.
           </p>
         </div>
-
-        <div className="text-slate-600 text-[10px] font-black uppercase tracking-widest border-b border-white/5 pb-2">
-          {filteredArt.length} Pieces Found
-        </div>
       </div>
 
       <div className="relative bg-white/[0.02] border border-white/5 rounded-3xl p-6 md:p-8 mb-16 shadow-2xl">
         <div className="flex items-center gap-8">
           {isAdmin && (
             <div className="flex items-center pr-8 border-r border-white/10 shrink-0">
-              <button 
+              <button
                 onClick={() => setManagerConfig({ open: true, type: 'category' })}
                 className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-blue-600 hover:text-white transition-all cursor-pointer text-slate-500 group"
               >
@@ -145,14 +148,14 @@ export default function Gallery() {
           )}
 
           <div className="flex flex-col gap-6 grow overflow-hidden">
-            <div 
+            <div
               ref={scrollRef}
               className="flex items-center gap-10 overflow-x-auto select-none cursor-grab active:cursor-grabbing gallery-scrollbar pb-2"
             >
               {['All Categories', ...dbCategories.map(c => c.name)].map(cat => (
-                <button 
-                  key={cat} 
-                  onClick={() => setSelectedCategory(cat)} 
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
                   className={`text-[12px] font-black uppercase tracking-[0.25em] transition-all relative pb-2 cursor-pointer whitespace-nowrap shrink-0 ${
                     selectedCategory === cat ? 'text-white' : 'text-slate-600 hover:text-slate-400'
                   }`}
@@ -165,20 +168,61 @@ export default function Gallery() {
               ))}
             </div>
 
-            <div className="flex items-center gap-3 overflow-x-auto gallery-scrollbar pb-2 pr-20">
+            <div className="flex items-center gap-3 overflow-x-auto gallery-scrollbar pb-2">
               {['All Themes', ...dbTypes.map(t => t.name)].map(type => (
-                <button 
-                  key={type} 
-                  onClick={() => setSelectedType(type)} 
+                <button
+                  key={type}
+                  onClick={() => setSelectedType(type)}
                   className={`text-[9px] font-bold uppercase tracking-[0.12em] px-5 py-2 rounded-full transition-all cursor-pointer whitespace-nowrap border shrink-0 ${
-                    selectedType === type 
-                    ? 'bg-blue-600/10 border-blue-500/50 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.1)]' 
-                    : 'border-white/5 bg-white/[0.01] text-slate-500 hover:text-slate-300'
+                    selectedType === type
+                      ? 'bg-blue-600/10 border-blue-500/50 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.1)]'
+                      : 'border-white/5 bg-white/[0.01] text-slate-500 hover:text-slate-300'
                   }`}
                 >
                   {type}
                 </button>
               ))}
+            </div>
+
+            <div className="flex items-center gap-4 pt-2 border-t border-white/5">
+              <div className="relative flex-1 max-w-xs">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search artworks..."
+                  className="w-full bg-white/[0.02] border border-white/5 rounded-xl pl-9 pr-4 py-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 placeholder:text-slate-700 outline-none focus:border-blue-500/30 focus:bg-white/[0.04] transition-all"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 transition-colors cursor-pointer"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              <span className="text-slate-600 text-[10px] font-black uppercase tracking-widest shrink-0">
+                {filteredArt.length} Pieces Found
+              </span>
             </div>
           </div>
         </div>
@@ -194,8 +238,8 @@ export default function Gallery() {
         <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
           {isAdmin && (
             <div className="break-inside-avoid mb-8">
-              <button 
-                onClick={() => { setEditingArtwork(null); setIsModalOpen(true); }} 
+              <button
+                onClick={() => { setEditingArtwork(null); setIsModalOpen(true); }}
                 className="w-full aspect-[4/3] rounded-3xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center gap-4 hover:bg-blue-500/[0.03] hover:border-blue-500/20 transition-all group cursor-pointer bg-white/[0.01]"
               >
                 <div className="w-14 h-14 rounded-full border border-blue-500/20 flex items-center justify-center text-blue-500 text-3xl font-light group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all">
@@ -208,8 +252,8 @@ export default function Gallery() {
 
           {filteredArt.map((art, index) => (
             <div key={art.id} className="break-inside-avoid mb-8">
-              <ArtworkCard 
-                art={art} 
+              <ArtworkCard
+                art={art}
                 isAdmin={isAdmin}
                 onEdit={() => { setEditingArtwork(art); setIsModalOpen(true); }}
                 onClick={() => { setSelectedArtwork(art); setSelectedIndex(index); }}
@@ -221,12 +265,14 @@ export default function Gallery() {
 
         {filteredArt.length === 0 && (
           <div className="py-24 text-center border-2 border-dashed border-white/[0.02] rounded-3xl">
-            <p className="text-slate-600 uppercase tracking-widest text-xs font-bold">No artworks found in this category.</p>
+            <p className="text-slate-600 uppercase tracking-widest text-xs font-bold">
+              {searchQuery ? `No artworks found for "${searchQuery}".` : 'No artworks found in this category.'}
+            </p>
           </div>
         )}
       </main>
 
-      <MetadataManager 
+      <MetadataManager
         isOpen={managerConfig.open}
         onClose={() => setManagerConfig({ ...managerConfig, open: false })}
         title={managerConfig.type === 'category' ? 'Categories' : 'Themes'}
@@ -238,19 +284,19 @@ export default function Gallery() {
         onSwitchType={(type) => setManagerConfig({ open: true, type })}
       />
 
-      <UploadModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSuccess={() => { fetchArtworks(); fetchMetadata(); setStorageRefresh(n => n + 1); }} 
-        editingArtwork={editingArtwork} 
+      <UploadModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={() => { fetchArtworks(); fetchMetadata(); setStorageRefresh(n => n + 1); }}
+        editingArtwork={editingArtwork}
       />
 
       {selectedArtwork && (
-        <ArtworkLightbox 
-          artwork={selectedArtwork} 
-          index={selectedIndex} 
-          total={filteredArt.length} 
-          onClose={() => setSelectedArtwork(null)} 
+        <ArtworkLightbox
+          artwork={selectedArtwork}
+          index={selectedIndex}
+          total={filteredArt.length}
+          onClose={() => setSelectedArtwork(null)}
           onNavigate={handleNavigate}
         />
       )}

@@ -236,9 +236,9 @@ export default function Gallery() {
       )}
 
       <main className="w-full px-2 md:px-0">
-        <div className="columns-2 lg:columns-3 gap-2 md:gap-8 block">
+        <div className="columns-2 lg:columns-3 gap-3 md:gap-4">
           {isAdmin && (
-            <div className="break-inside-avoid inline-block w-full mb-2 md:mb-8">
+            <div className="break-inside-avoid w-full mb-2 md:mb-8">
               <button
                 onClick={() => { setEditingArtwork(null); setIsModalOpen(true); }}
                 className="w-full aspect-[4/3] rounded-xl md:rounded-3xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center gap-3 md:gap-4 hover:bg-blue-500/[0.03] hover:border-blue-500/20 transition-all group cursor-pointer bg-white/[0.01]"
@@ -252,7 +252,7 @@ export default function Gallery() {
           )}
 
           {filteredArt.map((art, index) => (
-            <div key={art.id} className="break-inside-avoid inline-block w-full mb-2 md:mb-8">
+            <div key={art.id} className="break-inside-avoid w-full mb-2 md:mb-3">
               <ArtworkCard
                 art={art}
                 isAdmin={isAdmin}

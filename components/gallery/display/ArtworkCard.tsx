@@ -26,15 +26,10 @@ export default function ArtworkCard({ art, onClick, isAdmin, onEdit, onDelete }:
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      const { error: dbError } = await supabase
-        .from('artworks')
-        .delete()
-        .eq('id', art.id);
+      const { error: dbError } = await supabase.from('artworks').delete().eq('id', art.id);
       if (dbError) throw dbError;
-
       const path = extractStoragePath(art.image_url);
       if (path) await supabase.storage.from('gallery').remove([path]);
-
       onDelete?.();
     } catch (err) {
       console.error('Delete failed:', err);
@@ -47,14 +42,14 @@ export default function ArtworkCard({ art, onClick, isAdmin, onEdit, onDelete }:
   return (
     <>
       <div
-        className="group cursor-pointer break-inside-avoid mb-4 md:mb-8 relative"
+        className="group cursor-pointer break-inside-avoid relative"
         onClick={onClick}
       >
         {isAdmin && (
           <div className="absolute top-2 right-2 md:top-3 md:right-3 z-20 flex gap-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all">
             <button
               onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-              className="p-2 bg-slate-900/90 hover:bg-blue-600 text-white rounded-lg md:rounded-xl transition-all border border-white/10 backdrop-blur-md cursor-pointer"
+              className="p-1.5 md:p-2 bg-slate-900/90 hover:bg-blue-600 text-white rounded-lg md:rounded-xl transition-all border border-white/10 backdrop-blur-md cursor-pointer"
             >
               <svg className="w-3 h-3 md:w-4 md:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -62,7 +57,7 @@ export default function ArtworkCard({ art, onClick, isAdmin, onEdit, onDelete }:
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); setConfirming(true); }}
-              className="p-2 bg-slate-900/90 hover:bg-red-600 text-white rounded-lg md:rounded-xl transition-all border border-white/10 backdrop-blur-md cursor-pointer"
+              className="p-1.5 md:p-2 bg-slate-900/90 hover:bg-red-600 text-white rounded-lg md:rounded-xl transition-all border border-white/10 backdrop-blur-md cursor-pointer"
             >
               <svg className="w-3 h-3 md:w-4 md:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -77,29 +72,18 @@ export default function ArtworkCard({ art, onClick, isAdmin, onEdit, onDelete }:
             alt={art.title}
             className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
           />
-          
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
-            <div className="absolute bottom-0 left-0 right-0 p-3 md:hidden">
-                <h3 className="text-[10px] font-bold text-white truncate leading-tight">
-                    {art.title}
-                </h3>
-                <p className="text-[7px] uppercase tracking-widest text-blue-400 font-black mt-0.5">
-                    {art.type}
-                </p>
-            </div>
-          </div>
         </div>
 
-        <div className="hidden md:block mt-4 px-1">
-          <h3 className="text-sm font-bold text-slate-200 group-hover:text-blue-400 transition-colors duration-300 tracking-wide">
+        <div className="mt-2 md:mt-3 px-1">
+          <h3 className="text-[10px] md:text-sm font-bold text-slate-200 group-hover:text-blue-400 transition-colors duration-300 tracking-wide truncate">
             {art.title}
           </h3>
-          <div className="flex items-center gap-2 mt-1.5">
-            <span className="text-[9px] uppercase tracking-[0.2em] text-slate-500 font-bold">
+          <div className="flex items-center gap-1.5 mt-0.5 md:mt-1">
+            <span className="text-[8px] md:text-[9px] uppercase tracking-widest text-slate-500 font-bold truncate">
               {art.category}
             </span>
-            <span className="w-1 h-1 bg-slate-800 rounded-full" />
-            <span className="text-[9px] uppercase tracking-[0.2em] text-blue-500/70 font-bold">
+            <span className="w-1 h-1 bg-slate-700 rounded-full shrink-0" />
+            <span className="text-[8px] md:text-[9px] uppercase tracking-widest text-blue-500/70 font-bold truncate">
               {art.type}
             </span>
           </div>
@@ -128,8 +112,10 @@ export default function ArtworkCard({ art, onClick, isAdmin, onEdit, onDelete }:
               </p>
             </div>
             <div className="px-6 pb-6 flex gap-2">
-              <button onClick={() => setConfirming(false)} className="flex-1 py-2.5 rounded-xl border border-white/8 text-slate-400 text-[10px] font-black uppercase tracking-widest">Cancel</button>
-              <button onClick={handleDelete} className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-[10px] font-black uppercase tracking-widest">Delete</button>
+              <button onClick={() => setConfirming(false)} className="flex-1 py-2.5 rounded-xl border border-white/8 text-slate-400 text-[10px] font-black uppercase tracking-widest cursor-pointer">Cancel</button>
+              <button onClick={handleDelete} disabled={deleting} className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-[10px] font-black uppercase tracking-widest cursor-pointer disabled:opacity-50">
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
             </div>
           </div>
         </div>

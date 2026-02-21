@@ -31,17 +31,24 @@ export default function HeroContent({ profile, displayText, onOpenModal }: HeroC
         </div>
 
         <div className="flex gap-2 md:gap-3">
-          {(['instagram', 'twitter', 'mail'] as const).map((s) => (
-            <a
-              key={s}
-              href={profile.social_links[s]}
-              className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-blue-600/8 border border-blue-500/15 hover:border-blue-500/50 hover:bg-blue-600/20 flex items-center justify-center text-blue-400/70 hover:text-blue-400 transition-all"
-            >
-              {s === 'instagram' && <Instagram size={15} />}
-              {s === 'twitter' && <Twitter size={15} />}
-              {s === 'mail' && <Mail size={15} />}
-            </a>
-          ))}
+          {(['instagram', 'twitter', 'mail'] as const).map((s) => {
+            const isMail = s === 'mail';
+            const link = profile.social_links[s];
+            
+            return (
+              <a
+                key={s}
+                href={isMail && !link.includes('mailto:') ? `mailto:${link}` : link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-blue-600/8 border border-blue-500/15 hover:border-blue-500/50 hover:bg-blue-600/20 flex items-center justify-center text-blue-400/70 hover:text-blue-400 transition-all"
+              >
+                {s === 'instagram' && <Instagram size={15} />}
+                {s === 'twitter' && <Twitter size={15} />}
+                {s === 'mail' && <Mail size={15} />}
+              </a>
+            );
+          })}
         </div>
       </div>
 
@@ -79,7 +86,7 @@ export default function HeroContent({ profile, displayText, onOpenModal }: HeroC
                 <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 mb-0.5 md:mb-1">{type}</p>
                 <p className="text-slate-300 text-[11px] md:text-xs font-medium truncate">
                   {profile[type]?.length > 0
-                    ? profile[type].slice(0, 2).map((i) => i.label).join(', ') + (profile[type].length > 2 ? '...' : '')
+                    ? profile[type].slice(0, 2).map((i: any) => i.label).join(', ') + (profile[type].length > 2 ? '...' : '')
                     : 'Nothing added yet'}
                 </p>
               </div>

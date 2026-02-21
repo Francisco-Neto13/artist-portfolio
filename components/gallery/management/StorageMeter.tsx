@@ -51,8 +51,7 @@ export default function StorageMeter({ refreshTrigger }: { refreshTrigger?: any 
   return (
     <div className="relative w-full border-b border-white/[0.03] bg-slate-950">
 
-      {/* Metadata row */}
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between py-2">
+      <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-3">
           <div className={`w-1.5 h-1.5 rounded-full ${statusDot}`} />
           <span className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-600">

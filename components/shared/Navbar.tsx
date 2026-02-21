@@ -41,7 +41,7 @@ export default function Navbar() {
 
   return (
     <nav className="w-full border-b border-white/5 bg-slate-950/60 backdrop-blur-xl sticky top-0 z-[100] transition-all duration-300">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div className="px-4 md:px-16 lg:px-24 py-4 flex justify-between items-center">
         
         <a 
           href="#home"

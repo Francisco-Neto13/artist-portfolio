@@ -7,7 +7,7 @@ export default function Footer() {
 
   return (
     <footer className="w-full border-t border-white/5 bg-slate-950/60 backdrop-blur-xl transition-all duration-300">
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="px-4 md:px-16 lg:px-24 py-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-0">
           
           <div className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] flex items-center order-2 md:order-1">

@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import { Pencil, Trash2, Image as ImageIcon } from 'lucide-react';
-import { Commission } from './types';
+import { Commission } from '../types';
 import { getOptimizedUrl } from '@/lib/imageUtils'; 
 
 interface CommissionCardProps {

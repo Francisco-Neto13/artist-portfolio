@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { X, Check, Camera, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { Commission, DESCRIPTION_MAX } from './types';
+import { Commission, DESCRIPTION_MAX } from '../types';
 import { convertToWebP, getOptimizedUrl } from '@/lib/imageUtils'; 
 
 interface EditCommissionModalProps {

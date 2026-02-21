@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase"; 
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -59,9 +59,9 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-md relative z-10 p-6">
-
-      <div className={`${reveal()} mb-6`}>
+    <div className="w-full flex items-center justify-center min-h-screen">
+      
+      <div className={`fixed top-8 left-8 z-50 ${reveal()}`}>
         <Link 
           href="/" 
           className="group inline-flex items-center gap-3 px-4 py-2.5 bg-slate-900/60 border border-white/[0.08] hover:border-blue-500/30 hover:bg-slate-900/80 backdrop-blur-xl rounded-full transition-all shadow-xl cursor-pointer"
@@ -77,7 +77,7 @@ export default function LoginForm() {
         </Link>
       </div>
 
-      <div className={reveal("delay-150")}>
+      <div className={`w-full max-w-md p-6 relative z-10 ${reveal("delay-150")}`}>
         <div className="bg-slate-900/50 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl overflow-hidden">
 
           <div className="bg-gradient-to-r from-blue-600/10 via-slate-800/10 to-blue-600/10 border-b border-white/5 p-8 text-center">
@@ -138,7 +138,7 @@ export default function LoginForm() {
                   <button 
                     type="button" 
                     onClick={() => setShowPassword(!showPassword)} 
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-300 transition-colors cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-600 hover:text-slate-300 transition-colors cursor-pointer uppercase tracking-widest"
                   >
                     {showPassword ? "Hide" : "Show"}
                   </button>

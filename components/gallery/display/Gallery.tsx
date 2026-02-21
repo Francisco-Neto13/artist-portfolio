@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { Pencil } from 'lucide-react';
 import { Artwork, ArtworkCategory, ArtworkType } from '@/components/gallery/types';
 import UploadModal from '@/components/gallery/management/UploadModal';
 import MetadataManager from '@/components/gallery/management/MetadataManager';
@@ -121,42 +122,55 @@ export default function Gallery() {
     <div id="gallery" className="w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-16">
         <div className="animate-reveal">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-[0.3em] mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] mb-4 md:mb-6">
             <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
             Visual Archive
           </div>
-          <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-white">
+          <h2 className="text-3xl md:text-6xl font-bold tracking-tighter text-white">
             Selected Artworks
           </h2>
-          <p className="text-slate-500 text-sm mt-3 tracking-wide max-w-xl">
+          <p className="text-slate-500 text-xs md:text-sm mt-2 md:mt-3 tracking-wide max-w-xl">
             A curated collection of digital illustrations, character designs, and concepts.
           </p>
         </div>
       </div>
 
-      <div className="relative bg-white/[0.02] border border-white/5 rounded-3xl p-6 md:p-8 mb-16 shadow-2xl">
-        <div className="flex items-center gap-8">
+      <div className="relative bg-white/[0.02] border border-white/5 rounded-3xl p-4 md:p-8 mb-10 md:mb-16 shadow-2xl">
+        
+        {isAdmin && (
+          <div className="flex md:hidden mb-5">
+            <button
+              onClick={() => setManagerConfig({ open: true, type: 'category' })}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-blue-600 hover:text-white transition-all cursor-pointer text-slate-400 text-[10px] font-black uppercase tracking-widest"
+            >
+              <Pencil size={12} /> Manage Categories
+            </button>
+          </div>
+        )}
+
+        <div className="flex items-start gap-6">
           {isAdmin && (
-            <div className="flex items-center pr-8 border-r border-white/10 shrink-0">
+            <div className="hidden md:flex items-center pr-8 border-r border-white/10 shrink-0 pt-1">
               <button
                 onClick={() => setManagerConfig({ open: true, type: 'category' })}
                 className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-blue-600 hover:text-white transition-all cursor-pointer text-slate-500 group"
               >
-                <span className="text-xl group-hover:scale-110 transition-transform">✎</span>
+                <Pencil size={18} className="group-hover:scale-110 transition-transform" />
               </button>
             </div>
           )}
 
-          <div className="flex flex-col gap-6 grow overflow-hidden">
+          <div className="flex flex-col gap-4 md:gap-5 grow overflow-hidden">
+            {/* Categories */}
             <div
               ref={scrollRef}
-              className="flex items-center gap-10 overflow-x-auto select-none cursor-grab active:cursor-grabbing gallery-scrollbar pb-2"
+              className="flex items-center gap-5 md:gap-10 overflow-x-auto select-none cursor-grab active:cursor-grabbing gallery-scrollbar pb-2"
             >
               {['All Categories', ...dbCategories.map(c => c.name)].map(cat => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`text-[12px] font-black uppercase tracking-[0.25em] transition-all relative pb-2 cursor-pointer whitespace-nowrap shrink-0 ${
+                  className={`text-[11px] md:text-[12px] font-black uppercase tracking-[0.2em] md:tracking-[0.25em] transition-all relative pb-2 cursor-pointer whitespace-nowrap shrink-0 ${
                     selectedCategory === cat ? 'text-white' : 'text-slate-600 hover:text-slate-400'
                   }`}
                 >
@@ -168,12 +182,16 @@ export default function Gallery() {
               ))}
             </div>
 
-            <div className="flex items-center gap-3 overflow-x-auto gallery-scrollbar pb-2">
+            {/* Divider mobile */}
+            <div className="h-px bg-white/5 md:hidden" />
+
+            {/* Themes */}
+            <div className="flex items-center gap-2 md:gap-3 overflow-x-auto gallery-scrollbar pb-2">
               {['All Themes', ...dbTypes.map(t => t.name)].map(type => (
                 <button
                   key={type}
                   onClick={() => setSelectedType(type)}
-                  className={`text-[9px] font-bold uppercase tracking-[0.12em] px-5 py-2 rounded-full transition-all cursor-pointer whitespace-nowrap border shrink-0 ${
+                  className={`text-[9px] font-bold uppercase tracking-[0.12em] px-3 md:px-5 py-1.5 md:py-2 rounded-full transition-all cursor-pointer whitespace-nowrap border shrink-0 ${
                     selectedType === type
                       ? 'bg-blue-600/10 border-blue-500/50 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.1)]'
                       : 'border-white/5 bg-white/[0.01] text-slate-500 hover:text-slate-300'
@@ -184,8 +202,9 @@ export default function Gallery() {
               ))}
             </div>
 
-            <div className="flex items-center gap-4 pt-2 border-t border-white/5">
-              <div className="relative flex-1 max-w-xs">
+            {/* Search + count */}
+            <div className="flex items-center gap-3 pt-3 md:pt-2 border-t border-white/5">
+              <div className="relative flex-1">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="14"
@@ -206,7 +225,7 @@ export default function Gallery() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search artworks..."
-                  className="w-full bg-white/[0.02] border border-white/5 rounded-xl pl-9 pr-4 py-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 placeholder:text-slate-700 outline-none focus:border-blue-500/30 focus:bg-white/[0.04] transition-all"
+                  className="w-full bg-white/[0.02] border border-white/5 rounded-xl pl-9 pr-4 py-2.5 md:py-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 placeholder:text-slate-700 outline-none focus:border-blue-500/30 focus:bg-white/[0.04] transition-all"
                 />
                 {searchQuery && (
                   <button
@@ -221,7 +240,7 @@ export default function Gallery() {
                 )}
               </div>
               <span className="text-slate-600 text-[10px] font-black uppercase tracking-widest shrink-0">
-                {filteredArt.length} Pieces Found
+                {filteredArt.length} <span className="hidden md:inline">Pieces </span>Found
               </span>
             </div>
           </div>
@@ -235,7 +254,7 @@ export default function Gallery() {
       )}
 
       <main className="w-full">
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
+        <div className="columns-2 md:columns-2 lg:columns-3 gap-4 md:gap-8 space-y-4 md:space-y-8">
           {isAdmin && (
             <div className="break-inside-avoid mb-8">
               <button

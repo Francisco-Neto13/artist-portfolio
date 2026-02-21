@@ -1,5 +1,4 @@
 'use client';
-
 import { CommissionStatus } from './types';
 
 interface StatusBadgeProps {
@@ -36,12 +35,11 @@ export default function StatusBadge({ status, isAdmin, onToggle }: StatusBadgePr
   const current = config[status];
 
   return (
-    <div className="flex items-center gap-3">
-      <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border ${current.bg} ${current.border} ${current.text} text-[10px] font-black uppercase tracking-[0.2em]`}>
-        <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${current.dot}`} />
+    <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+      <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border ${current.bg} ${current.border} ${current.text} text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] md:tracking-[0.2em]`}>
+        <span className={`w-1.5 h-1.5 rounded-full animate-pulse shrink-0 ${current.dot}`} />
         Commissions {current.label}
       </div>
-
       {isAdmin && (
         <button 
           onClick={onToggle}

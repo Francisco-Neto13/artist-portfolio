@@ -124,31 +124,33 @@ export default function CommissionSection() {
 
   return (
     <section id="commissions" className="relative min-h-screen bg-slate-950 border-t border-white/[0.03]">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-16 md:py-28">
+      <div className="w-full py-16 md:py-28">
+        
+        <div className="px-4 md:px-0 mb-10 md:mb-16">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6">
+            <div className="flex flex-col">
+              <StatusBadge status={status} isAdmin={isAdmin} onToggle={toggleStatus} />
+              <h2 className="text-3xl md:text-6xl font-bold tracking-tighter text-white mt-4 md:mt-6">
+                Commission Tiers
+              </h2>
+              <p className="text-slate-500 text-sm mt-2 md:mt-3 tracking-wide">
+                Choose the service level that fits your project
+              </p>
+            </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 mb-10 md:mb-16">
-          <div>
-            <StatusBadge status={status} isAdmin={isAdmin} onToggle={toggleStatus} />
-            <h2 className="text-3xl md:text-6xl font-bold tracking-tighter text-white mt-4 md:mt-6">
-              Commission Tiers
-            </h2>
-            <p className="text-slate-500 text-sm mt-2 md:mt-3 tracking-wide">
-              Choose the service level that fits your project
-            </p>
+            {isAdmin && (
+              <button 
+                onClick={handleAdd}
+                className="flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 rounded-full transition-all font-bold text-[9px] uppercase tracking-[0.25em] cursor-pointer bg-white/[0.03] border border-white/[0.08] text-slate-400 hover:border-blue-500/30 hover:text-slate-300"
+              >
+                <Plus size={12} />
+                Add New Tier
+              </button>
+            )}
           </div>
-
-          {isAdmin && (
-            <button 
-              onClick={handleAdd}
-              className="flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 rounded-full transition-all font-bold text-[9px] uppercase tracking-[0.25em] cursor-pointer bg-white/[0.03] border border-white/[0.08] text-slate-400 hover:border-blue-500/30 hover:text-slate-300"
-            >
-              <Plus size={12} />
-              Add New Tier
-            </button>
-          )}
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 md:gap-8 px-2 md:px-0">
           {commissions.map((commission) => (
             <CommissionCard
               key={commission.id}
@@ -160,7 +162,7 @@ export default function CommissionSection() {
           ))}
         </div>
 
-        <div className="mt-20 md:mt-32 text-center max-w-2xl mx-auto">
+        <div className="mt-20 md:mt-32 px-4 md:px-0 text-center max-w-2xl mx-auto">
           <div className="inline-block mb-8 md:mb-10">
             <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] md:tracking-[0.5em] text-blue-500 mb-3 md:mb-4">
               Get in Touch

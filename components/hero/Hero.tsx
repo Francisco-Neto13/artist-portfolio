@@ -86,7 +86,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section id="home" className="min-h-screen flex flex-col items-center justify-center bg-slate-950 relative px-6 py-16">
+    <section id="home" className="min-h-[80vh] md:min-h-screen flex flex-col items-center justify-center bg-slate-950 relative px-6 py-20 md:py-16">
       <HeroContent
         profile={profile}
         displayText={displayText}

@@ -120,7 +120,7 @@ export default function Gallery() {
 
   return (
     <div id="gallery" className="w-full">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-16">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 md:mb-16 px-4 md:px-0">
         <div className="animate-reveal">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] mb-4 md:mb-6">
             <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
@@ -135,8 +135,7 @@ export default function Gallery() {
         </div>
       </div>
 
-      <div className="relative bg-white/[0.02] border border-white/5 rounded-3xl p-4 md:p-8 mb-10 md:mb-16 shadow-2xl">
-        
+      <div className="relative bg-white/[0.02] border-y md:border border-white/5 md:rounded-3xl p-4 md:p-8 mb-6 md:mb-16 shadow-2xl">
         {isAdmin && (
           <div className="flex md:hidden mb-5">
             <button
@@ -161,7 +160,6 @@ export default function Gallery() {
           )}
 
           <div className="flex flex-col gap-4 md:gap-5 grow overflow-hidden">
-            {/* Categories */}
             <div
               ref={scrollRef}
               className="flex items-center gap-5 md:gap-10 overflow-x-auto select-none cursor-grab active:cursor-grabbing gallery-scrollbar pb-2"
@@ -182,10 +180,8 @@ export default function Gallery() {
               ))}
             </div>
 
-            {/* Divider mobile */}
             <div className="h-px bg-white/5 md:hidden" />
 
-            {/* Themes */}
             <div className="flex items-center gap-2 md:gap-3 overflow-x-auto gallery-scrollbar pb-2">
               {['All Themes', ...dbTypes.map(t => t.name)].map(type => (
                 <button
@@ -202,42 +198,22 @@ export default function Gallery() {
               ))}
             </div>
 
-            {/* Search + count */}
             <div className="flex items-center gap-3 pt-3 md:pt-2 border-t border-white/5">
               <div className="relative flex-1">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600"
                 >
-                  <circle cx="11" cy="11" r="8" />
-                  <path d="m21 21-4.35-4.35" />
+                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
                 </svg>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search artworks..."
-                  className="w-full bg-white/[0.02] border border-white/5 rounded-xl pl-9 pr-4 py-2.5 md:py-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 placeholder:text-slate-700 outline-none focus:border-blue-500/30 focus:bg-white/[0.04] transition-all"
+                  className="w-full bg-white/[0.02] border border-white/5 rounded-xl pl-9 pr-4 py-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 placeholder:text-slate-700 outline-none focus:border-blue-500/30 focus:bg-white/[0.04] transition-all"
                 />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 transition-colors cursor-pointer"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
-                )}
               </div>
               <span className="text-slate-600 text-[10px] font-black uppercase tracking-widest shrink-0">
                 {filteredArt.length} <span className="hidden md:inline">Pieces </span>Found
@@ -248,29 +224,29 @@ export default function Gallery() {
       </div>
 
       {isAdmin && (
-        <div className="mb-16">
+        <div className="mb-10 md:mb-16 px-4 md:px-0">
           <StorageMeter refreshTrigger={storageRefresh} />
         </div>
       )}
 
-      <main className="w-full">
-        <div className="columns-2 md:columns-2 lg:columns-3 gap-4 md:gap-8 space-y-4 md:space-y-8">
+      <main className="w-full px-2 md:px-0">
+        <div className="columns-2 lg:columns-3 gap-2 md:gap-8 space-y-2 md:space-y-8">
           {isAdmin && (
-            <div className="break-inside-avoid mb-8">
+            <div className="break-inside-avoid mb-2 md:mb-8">
               <button
                 onClick={() => { setEditingArtwork(null); setIsModalOpen(true); }}
-                className="w-full aspect-[4/3] rounded-3xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center gap-4 hover:bg-blue-500/[0.03] hover:border-blue-500/20 transition-all group cursor-pointer bg-white/[0.01]"
+                className="w-full aspect-[4/3] rounded-xl md:rounded-3xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center gap-3 md:gap-4 hover:bg-blue-500/[0.03] hover:border-blue-500/20 transition-all group cursor-pointer bg-white/[0.01]"
               >
-                <div className="w-14 h-14 rounded-full border border-blue-500/20 flex items-center justify-center text-blue-500 text-3xl font-light group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                <div className="w-10 h-10 md:w-14 md:h-14 rounded-full border border-blue-500/20 flex items-center justify-center text-blue-500 text-2xl md:text-3xl font-light group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all">
                   +
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600 group-hover:text-blue-400">Upload Art</span>
+                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-slate-600 group-hover:text-blue-400">Upload Art</span>
               </button>
             </div>
           )}
 
           {filteredArt.map((art, index) => (
-            <div key={art.id} className="break-inside-avoid mb-8">
+            <div key={art.id} className="break-inside-avoid mb-2 md:mb-8">
               <ArtworkCard
                 art={art}
                 isAdmin={isAdmin}
@@ -283,7 +259,7 @@ export default function Gallery() {
         </div>
 
         {filteredArt.length === 0 && (
-          <div className="py-24 text-center border-2 border-dashed border-white/[0.02] rounded-3xl">
+          <div className="mx-2 md:mx-0 py-24 text-center border-2 border-dashed border-white/[0.02] rounded-3xl">
             <p className="text-slate-600 uppercase tracking-widest text-xs font-bold">
               {searchQuery ? `No artworks found for "${searchQuery}".` : 'No artworks found in this category.'}
             </p>

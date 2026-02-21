@@ -91,30 +91,47 @@ export default function Gallery() {
     let startX: number;
     let scrollLeft: number;
 
-    const mDown = (e: MouseEvent) => {
+    const start = (pageX: number) => {
       isDown = true;
-      startX = e.pageX - slider.offsetLeft;
+      startX = pageX - slider.offsetLeft;
       scrollLeft = slider.scrollLeft;
     };
-    const mLeave = () => { isDown = false; };
-    const mUp = () => { isDown = false; };
-    const mMove = (e: MouseEvent) => {
+
+    const end = () => { isDown = false; };
+
+    const move = (pageX: number) => {
       if (!isDown) return;
-      e.preventDefault();
-      const x = e.pageX - slider.offsetLeft;
-      slider.scrollLeft = scrollLeft - (x - startX) * 2;
+      const x = pageX - slider.offsetLeft;
+      const walk = (x - startX) * 2;
+      slider.scrollLeft = scrollLeft - walk;
     };
+
+    const mDown = (e: MouseEvent) => start(e.pageX);
+    const mLeave = () => end();
+    const mUp = () => end();
+    const mMove = (e: MouseEvent) => move(e.pageX);
+
+    const tStart = (e: TouchEvent) => start(e.touches[0].pageX);
+    const tEnd = () => end();
+    const tMove = (e: TouchEvent) => move(e.touches[0].pageX);
 
     slider.addEventListener('mousedown', mDown);
     slider.addEventListener('mouseleave', mLeave);
     slider.addEventListener('mouseup', mUp);
     slider.addEventListener('mousemove', mMove);
+    
+    slider.addEventListener('touchstart', tStart, { passive: true });
+    slider.addEventListener('touchend', tEnd);
+    slider.addEventListener('touchmove', tMove, { passive: true });
 
     return () => {
       slider.removeEventListener('mousedown', mDown);
       slider.removeEventListener('mouseleave', mLeave);
       slider.removeEventListener('mouseup', mUp);
       slider.removeEventListener('mousemove', mMove);
+      slider.removeEventListener('touchstart', tStart);
+      slider.removeEventListener('touchend', tEnd);
+      slider.removeEventListener('touchmove', tMove);
     };
   }, []);
 
@@ -136,17 +153,6 @@ export default function Gallery() {
       </div>
 
       <div className="relative bg-white/[0.02] border-y md:border border-white/5 md:rounded-3xl p-4 md:p-8 mb-6 md:mb-16 shadow-2xl">
-        {isAdmin && (
-          <div className="flex md:hidden mb-5">
-            <button
-              onClick={() => setManagerConfig({ open: true, type: 'category' })}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-blue-600 hover:text-white transition-all cursor-pointer text-slate-400 text-[10px] font-black uppercase tracking-widest"
-            >
-              <Pencil size={12} /> Manage Categories
-            </button>
-          </div>
-        )}
-
         <div className="flex items-start gap-6">
           {isAdmin && (
             <div className="hidden md:flex items-center pr-8 border-r border-white/10 shrink-0 pt-1">
@@ -230,9 +236,9 @@ export default function Gallery() {
       )}
 
       <main className="w-full px-2 md:px-0">
-        <div className="columns-2 lg:columns-3 gap-2 md:gap-8 space-y-2 md:space-y-8">
+        <div className="columns-2 lg:columns-3 gap-2 md:gap-8 block">
           {isAdmin && (
-            <div className="break-inside-avoid mb-2 md:mb-8">
+            <div className="break-inside-avoid inline-block w-full mb-2 md:mb-8">
               <button
                 onClick={() => { setEditingArtwork(null); setIsModalOpen(true); }}
                 className="w-full aspect-[4/3] rounded-xl md:rounded-3xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center gap-3 md:gap-4 hover:bg-blue-500/[0.03] hover:border-blue-500/20 transition-all group cursor-pointer bg-white/[0.01]"
@@ -246,7 +252,7 @@ export default function Gallery() {
           )}
 
           {filteredArt.map((art, index) => (
-            <div key={art.id} className="break-inside-avoid mb-2 md:mb-8">
+            <div key={art.id} className="break-inside-avoid inline-block w-full mb-2 md:mb-8">
               <ArtworkCard
                 art={art}
                 isAdmin={isAdmin}

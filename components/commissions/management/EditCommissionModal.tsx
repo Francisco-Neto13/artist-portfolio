@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { X, Check, Camera, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { Commission, DESCRIPTION_MAX } from '../types';
+import { Commission, DESCRIPTION_MAX, COMM_TITLE_MAX, COMM_PRICE_MAX } from '../types';
 import { convertToWebP, getOptimizedUrl } from '@/lib/imageUtils'; 
 
 interface EditCommissionModalProps {
@@ -78,6 +78,12 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
     }, 300);
   };
 
+  const isInvalid = 
+    (draft.title?.length || 0) > COMM_TITLE_MAX || 
+    (draft.price?.length || 0) > COMM_PRICE_MAX || 
+    (draft.description?.length || 0) > DESCRIPTION_MAX ||
+    !draft.title?.trim();
+
   const modal = (
     <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={onClose} />
@@ -97,7 +103,7 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
 
         <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-5 space-y-4 md:space-y-5" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(59,130,246,0.2) transparent' }}>
           <div>
-            <label className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500 block mb-2 md:mb-3">Example Image</label>
+            <label className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500 block mb-2 md:mb-3 ml-1">Example Image</label>
             <div className="relative group">
               <label className="cursor-pointer block">
                 <div className="aspect-[16/9] md:aspect-[4/3] w-full rounded-xl overflow-hidden bg-slate-950 border border-white/[0.06] relative flex items-center justify-center">
@@ -132,39 +138,50 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
                 <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploading} />
               </label>
             </div>
-            <p className="text-[9px] text-slate-600 mt-1.5 tracking-wide">Click to upload image</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 md:block md:space-y-4">
-            <div className="md:mb-0">
-              <label className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500 block mb-2">Title</label>
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center px-1">
+                <span className="text-[8px] font-bold text-slate-600 uppercase tracking-wider">Title</span>
+                <span className={`text-[8px] font-bold ${(draft.title?.length || 0) >= COMM_TITLE_MAX ? 'text-red-500' : 'text-slate-600'}`}>
+                  {draft.title?.length || 0}/{COMM_TITLE_MAX}
+                </span>
+              </div>
               <input 
-                className="w-full bg-slate-950/80 border border-white/[0.06] rounded-xl px-3 md:px-4 py-2.5 md:py-3 text-white text-sm outline-none focus:border-blue-500/50 transition-all"
+                className="w-full bg-slate-950/80 border border-white/[0.06] rounded-xl px-3 md:px-4 py-2 text-white text-xs outline-none focus:border-blue-500/50 transition-all"
                 value={draft.title || ''}
+                maxLength={COMM_TITLE_MAX}
                 onChange={(e) => setDraft({ ...draft, title: e.target.value })}
               />
             </div>
 
-            <div>
-              <label className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500 block mb-2">Price (USD)</label>
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center px-1">
+                <span className="text-[8px] font-bold text-slate-600 uppercase tracking-wider">Price (USD)</span>
+                <span className={`text-[8px] font-bold ${(draft.price?.length || 0) >= COMM_PRICE_MAX ? 'text-red-500' : 'text-slate-600'}`}>
+                  {draft.price?.length || 0}/{COMM_PRICE_MAX}
+                </span>
+              </div>
               <input 
-                className="w-full bg-slate-950/80 border border-white/[0.06] rounded-xl px-3 md:px-4 py-2.5 md:py-3 text-white text-sm outline-none focus:border-blue-500/50 transition-all"
+                className="w-full bg-slate-950/80 border border-white/[0.06] rounded-xl px-3 md:px-4 py-2 text-white text-xs outline-none focus:border-blue-500/50 transition-all"
                 value={draft.price || ''}
+                maxLength={COMM_PRICE_MAX}
                 placeholder="150+"
                 onChange={(e) => setDraft({ ...draft, price: e.target.value })}
               />
             </div>
           </div>
 
-          <div>
-            <div className="flex justify-between mb-2">
-              <label className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500">Description</label>
-              <span className={`text-[9px] font-mono tabular-nums ${(draft.description?.length || 0) > DESCRIPTION_MAX ? 'text-red-400' : 'text-slate-600'}`}>
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center px-1">
+              <span className="text-[8px] font-bold text-slate-600 uppercase tracking-wider">Description</span>
+              <span className={`text-[8px] font-bold ${(draft.description?.length || 0) >= DESCRIPTION_MAX ? 'text-red-500' : 'text-slate-600'}`}>
                 {draft.description?.length || 0}/{DESCRIPTION_MAX}
               </span>
             </div>
             <textarea 
-              className="w-full bg-slate-950/80 border border-white/[0.06] rounded-xl px-3 md:px-4 py-2.5 md:py-3 text-white text-sm outline-none focus:border-blue-500/50 transition-all resize-none"
+              className="w-full bg-slate-950/80 border border-white/[0.06] rounded-xl px-3 md:px-4 py-2 text-white text-xs outline-none focus:border-blue-500/50 transition-all resize-none"
               rows={4}
               value={draft.description || ''}
               maxLength={DESCRIPTION_MAX}
@@ -174,7 +191,7 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
           </div>
         </div>
 
-        <div className="px-4 md:px-6 py-4 md:py-5 border-t border-white/[0.05] flex gap-2 shrink-0" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 1rem))' }}>
+        <div className="px-4 md:px-6 py-4 md:py-5 border-t border-white/[0.05] flex gap-2 shrink-0">
           <button 
             onClick={onClose} 
             disabled={isSaving}
@@ -184,7 +201,7 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
           </button>
           <button 
             onClick={handleSave}
-            disabled={isSaving || (draft.description?.length || 0) > DESCRIPTION_MAX}
+            disabled={isSaving || isInvalid}
             className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all cursor-pointer shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
           >
             {isSaving ? (

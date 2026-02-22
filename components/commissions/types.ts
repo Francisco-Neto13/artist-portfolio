@@ -1,3 +1,7 @@
+export const COMM_TITLE_MAX = 30;
+export const COMM_PRICE_MAX = 10;
+export const DESCRIPTION_MAX = 300; 
+
 export interface Commission {
   id: string;
   title: string;
@@ -10,4 +14,3 @@ export interface Commission {
 }
 
 export type CommissionStatus = 'open' | 'closed' | 'waitlist';
-export const DESCRIPTION_MAX = 300;

@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { Menu, X } from 'lucide-react'; 
+import { Menu, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [profileName, setProfileName] = useState<string>('');
   const pathname = usePathname();
 
   useEffect(() => {
@@ -20,6 +21,10 @@ export default function Navbar() {
       setIsAdmin(!!session);
     });
 
+    supabase.from('profiles').select('full_name').single().then(({ data }) => {
+      if (data?.full_name) setProfileName(data.full_name.toUpperCase());
+    });
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -27,7 +32,7 @@ export default function Navbar() {
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
-    setIsOpen(false); 
+    setIsOpen(false);
     const element = document.getElementById(id);
     if (element) {
       const offset = 80;
@@ -35,11 +40,7 @@ export default function Navbar() {
       const elementRect = element.getBoundingClientRect().top;
       const elementPosition = elementRect - bodyRect;
       const offsetPosition = elementPosition - offset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
+      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
     }
   };
 
@@ -47,47 +48,47 @@ export default function Navbar() {
     <nav className="w-full border-b border-white/5 bg-slate-950/60 backdrop-blur-xl sticky top-0 z-[100] transition-all duration-300">
       <div className="px-4 md:px-16 lg:px-24 py-4 flex justify-between items-center">
         
-        <a 
+        <a
           href="#home"
           onClick={(e) => scrollToSection(e, 'home')}
           className="group flex items-center text-xl font-black tracking-tighter text-blue-500 cursor-pointer"
         >
-          <span>A</span>
+          <span>{profileName[0] ?? 'A'}</span>
           <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-[200px] transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100">
-            TMISUKI
+            {profileName.slice(1)}
           </span>
         </a>
 
         <div className="hidden md:flex items-center gap-8">
-          <a 
-            href="#gallery" 
+          <a
+            href="#gallery"
             onClick={(e) => scrollToSection(e, 'gallery')}
             className="relative text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-blue-400 transition-colors group py-1"
           >
             Gallery
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
           </a>
-          
-          <a 
-            href="#commissions" 
+
+          <a
+            href="#commissions"
             onClick={(e) => scrollToSection(e, 'commissions')}
             className="relative text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-blue-400 transition-colors group py-1"
           >
             Commissions
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300 group-hover:w-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
           </a>
 
           <div className="w-px h-5 bg-gradient-to-b from-transparent via-white/20 to-transparent mx-2" />
 
           {isAdmin ? (
-            <Link 
+            <Link
               href="/dashboard"
               className="group flex items-center gap-2 px-5 py-2 border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-600 hover:border-blue-500 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all duration-500 cursor-pointer"
             >
               Dashboard
             </Link>
           ) : (
-            <Link 
+            <Link
               href="/auth/login"
               className="px-5 py-2 border border-white/10 bg-white/5 text-slate-400 hover:bg-blue-600 hover:border-blue-500 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all duration-500 cursor-pointer"
             >
@@ -96,7 +97,7 @@ export default function Navbar() {
           )}
         </div>
 
-        <button 
+        <button
           className="md:hidden text-slate-400 hover:text-white transition-colors"
           onClick={() => setIsOpen(!isOpen)}
         >
@@ -107,15 +108,15 @@ export default function Navbar() {
       {isOpen && (
         <div className="md:hidden absolute top-full left-0 w-full bg-slate-950 border-b border-white/5 animate-in slide-in-from-top duration-300">
           <div className="flex flex-col p-6 gap-6">
-            <a 
-              href="#gallery" 
+            <a
+              href="#gallery"
               onClick={(e) => scrollToSection(e, 'gallery')}
               className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400"
             >
               Gallery
             </a>
-            <a 
-              href="#commissions" 
+            <a
+              href="#commissions"
               onClick={(e) => scrollToSection(e, 'commissions')}
               className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400"
             >

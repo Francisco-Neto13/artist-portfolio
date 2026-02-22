@@ -3,7 +3,14 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { ProfileData, BIO_MAX } from '../types';
+import { 
+  ProfileData, 
+  BIO_MAX, 
+  NAME_MAX, 
+  SOCIAL_MAX, 
+  LOCATION_MAX, 
+  TAG_LABEL_MAX 
+} from '../types';
 import EditAvatarSection from './EditAvatarSection';
 import EditProfileFields from './EditProfileFields';
 import EditSocialLinks from './EditSocialLinks';
@@ -85,6 +92,12 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
 
   if (!mounted) return null;
 
+  const isInvalid = 
+    draft.full_name.length > NAME_MAX || 
+    draft.bio.length > BIO_MAX || 
+    draft.location.length > LOCATION_MAX ||
+    Object.values(draft.social_links).some(link => link.length > SOCIAL_MAX);
+
   return createPortal(
     <>
       <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
@@ -105,23 +118,31 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
               uploading={avatarUploading}
               onChange={handleAvatarUpload}
             />
+            
             <EditProfileFields
               fullName={draft.full_name}
               bio={draft.bio}
               location={draft.location}
+              nameMax={NAME_MAX} 
+              bioMax={BIO_MAX}
+              locationMax={LOCATION_MAX}
               onChangeName={(v) => onDraftChange({ ...draft, full_name: v })}
               onChangeBio={(v) => onDraftChange({ ...draft, bio: v })}
               onChangeLocation={(v) => onDraftChange({ ...draft, location: v })}
             />
+
             <EditSocialLinks
               links={draft.social_links}
+              socialMax={SOCIAL_MAX}
               onChange={(links) => onDraftChange({ ...draft, social_links: links })}
             />
+
             {(['languages', 'hobbies'] as const).map((type) => (
               <EditListSection
                 key={type}
                 type={type}
                 items={draft[type]}
+                tagMax={TAG_LABEL_MAX}
                 onAdd={() => addItem(type)}
                 onRemove={(i) => removeItem(type, i)}
                 onUpdate={(i, field, value) => updateItem(type, i, field, value)}
@@ -133,7 +154,12 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
             <button type="button" onClick={onCancel} disabled={isSaving} className="flex-1 py-2.5 rounded-xl border border-white/8 text-slate-400 hover:text-white hover:border-white/20 text-[10px] font-black uppercase tracking-[0.2em] transition-all cursor-pointer disabled:opacity-50">
               Cancel
             </button>
-            <button type="button" onClick={onSave} disabled={isSaving || draft.bio.length > BIO_MAX} className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all cursor-pointer shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
+            <button 
+              type="button" 
+              onClick={onSave} 
+              disabled={isSaving || isInvalid} 
+              className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all cursor-pointer shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
+            >
               {isSaving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
               {isSaving ? 'Saving...' : 'Save Changes'}
             </button>

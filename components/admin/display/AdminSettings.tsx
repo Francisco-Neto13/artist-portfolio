@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { CheckCircle2, AlertCircle, ShieldCheck, ShieldAlert, Eye, EyeOff } from 'lucide-react';
-import { EmailForm } from './EmailForm';
-import { PasswordForm } from './PasswordForm';
+import { EmailForm } from '../management/EmailForm';
+import { PasswordForm } from '../management/PasswordForm';
+import { ADMIN_PASSWORD_MAX } from '../types'; // Importando a constante
 
 export default function AdminSettings() {
   const [currentEmail, setCurrentEmail] = useState<string | null>(null);
@@ -110,21 +111,30 @@ export default function AdminSettings() {
             </div>
           </div>
           
-          <div className="relative w-full">
-            <input
-              type={showCurrent ? "text" : "password"}
-              placeholder="Your current password"
-              value={currentPassword}
-              onChange={(e) => { setCurrentPassword(e.target.value); setVerified(false); }}
-              className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 pr-12"
-            />
-            <button 
-              type="button" 
-              onClick={() => setShowCurrent(!showCurrent)} 
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-1"
-            >
-              {showCurrent ? <EyeOff size={18}/> : <Eye size={18}/>}
-            </button>
+          <div className="relative w-full space-y-1.5">
+            <div className="flex justify-between items-center px-1">
+              <span className="text-[8px] font-bold text-slate-600 uppercase tracking-wider">Current Password</span>
+              <span className={`text-[8px] font-bold ${currentPassword.length >= ADMIN_PASSWORD_MAX ? 'text-red-500' : 'text-slate-600'}`}>
+                {currentPassword.length}/{ADMIN_PASSWORD_MAX}
+              </span>
+            </div>
+            <div className="relative">
+              <input
+                type={showCurrent ? "text" : "password"}
+                maxLength={ADMIN_PASSWORD_MAX}
+                placeholder="Your current password"
+                value={currentPassword}
+                onChange={(e) => { setCurrentPassword(e.target.value); setVerified(false); }}
+                className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-5 py-4 text-sm focus:outline-none focus:border-blue-500/50 transition-all text-white placeholder:text-slate-600 pr-12"
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowCurrent(!showCurrent)} 
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-1"
+              >
+                {showCurrent ? <EyeOff size={18}/> : <Eye size={18}/>}
+              </button>
+            </div>
           </div>
         </div>
       </div>

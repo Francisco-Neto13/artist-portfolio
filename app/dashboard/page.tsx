@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import AdminSettings from '@/components/admin/AdminSettings';
+import AdminSettings from '@/components/admin/display/AdminSettings';
 import { LogOut, ArrowLeft, ShieldCheck } from 'lucide-react';
 
 export default function DashboardPage() {

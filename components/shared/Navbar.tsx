@@ -28,7 +28,7 @@ export default function Navbar() {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (pathname.startsWith('/auth')) return null;
+  if (pathname.startsWith('/auth') || pathname.startsWith('/dashboard')) return null;
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();

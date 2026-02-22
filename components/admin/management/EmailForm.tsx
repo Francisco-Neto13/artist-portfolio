@@ -1,4 +1,5 @@
 import { Mail, Loader2 } from 'lucide-react';
+import { ADMIN_EMAIL_MAX } from '../types'; 
 
 interface EmailFormProps {
   currentEmail: string | null;
@@ -21,8 +22,10 @@ export const EmailForm = ({ currentEmail, newEmail, setNewEmail, loading, disabl
       </div>
 
       <div className="space-y-4">
-        <div className="space-y-2">
-          <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-1">Current Email</label>
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center px-1">
+            <span className="text-[8px] font-bold text-slate-600 uppercase tracking-wider">Current Email</span>
+          </div>
           <input 
             type="text" 
             value={currentEmail || ''} 
@@ -31,13 +34,19 @@ export const EmailForm = ({ currentEmail, newEmail, setNewEmail, loading, disabl
           />
         </div>
         
-        <div className="space-y-2">
-          <label className="text-[9px] font-black uppercase tracking-widest text-blue-500 ml-1">New Email</label>
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center px-1">
+            <span className="text-[8px] font-bold text-blue-500 uppercase tracking-wider">New Email</span>
+            <span className={`text-[8px] font-bold ${newEmail.length >= ADMIN_EMAIL_MAX ? 'text-red-500' : 'text-slate-600'}`}>
+              {newEmail.length}/{ADMIN_EMAIL_MAX}
+            </span>
+          </div>
           <input
             type="email"
+            maxLength={ADMIN_EMAIL_MAX}
             placeholder="Enter new email address"
             value={newEmail}
-            onChange={(e)=>setNewEmail(e.target.value)}
+            onChange={(e) => setNewEmail(e.target.value)}
             required
             className="w-full bg-slate-900/50 border border-white/10 rounded-xl md:rounded-2xl px-4 py-3.5 md:px-5 md:py-4 text-xs md:text-sm focus:outline-none focus:border-blue-500 text-white transition-all"
           />
@@ -46,7 +55,7 @@ export const EmailForm = ({ currentEmail, newEmail, setNewEmail, loading, disabl
     </div>
 
     <button 
-      disabled={loading || disabled} 
+      disabled={loading || disabled || newEmail.length > ADMIN_EMAIL_MAX} 
       className="w-full py-3.5 md:py-4 bg-white text-slate-950 rounded-xl md:rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-blue-500 hover:text-white transition-all disabled:opacity-20 cursor-pointer mt-6"
     >
       {loading ? <Loader2 className="animate-spin mx-auto" size={16}/> : 'Update Email'}

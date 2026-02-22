@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { Instagram, Twitter, Mail, MapPin, Languages, Palette } from 'lucide-react';
-import { ProfileData } from './types';
+import { ProfileData } from '../types';
 
 interface HeroContentProps {
   profile: ProfileData;

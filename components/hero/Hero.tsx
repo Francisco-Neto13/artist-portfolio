@@ -3,9 +3,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { Pencil } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { ProfileData, DEFAULT_PROFILE } from './types';
-import HeroContent from './HeroContent';
-import EditPanel from './EditPanel';
-import InfoModal from './InfoModal';
+import HeroContent from './display/HeroContent';
+import EditPanel from './management/EditPanel';
+import InfoModal from './display/InfoModal';
 
 export default function Hero() {
   const [isAdmin, setIsAdmin] = useState(false);

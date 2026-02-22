@@ -1,6 +1,6 @@
 'use client';
 import Hero from '@/components/hero/Hero';
-import Gallery from '@/components/gallery/display/Gallery';
+import Gallery from '@/components/gallery/Gallery';
 import CommissionSection from '@/components/commissions/CommissionSection'; 
 
 export default function Home() {

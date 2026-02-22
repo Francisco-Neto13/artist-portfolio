@@ -9,6 +9,7 @@ import EditProfileFields from './EditProfileFields';
 import EditSocialLinks from './EditSocialLinks';
 import EditListSection from './EditListSection';
 import AvatarCropModal from './AvatarCropModal';
+import { convertToWebP } from '@/lib/imageUtils';
 
 interface EditPanelProps {
   draft: ProfileData;
@@ -57,15 +58,21 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
     setCropSrc(null);
     setAvatarUploading(true);
     try {
+      const file = new File([blob], 'avatar.png', { type: blob.type });
+      const { blob: optimizedBlob } = await convertToWebP(file, 500);
+
       if (draft.avatar_url && draft.avatar_url.includes('perfil')) {
         const oldFileName = draft.avatar_url.split('/').pop()?.split('?')[0];
         if (oldFileName) await supabase.storage.from('perfil').remove([oldFileName]);
       }
+
       const fileName = `avatar-${Date.now()}.webp`;
       const { error: upErr } = await supabase.storage
         .from('perfil')
-        .upload(fileName, blob, { upsert: false, contentType: 'image/webp', cacheControl: '31536000' });
+        .upload(fileName, optimizedBlob, { upsert: false, contentType: 'image/webp', cacheControl: '31536000' });
+
       if (upErr) throw upErr;
+
       const { data } = supabase.storage.from('perfil').getPublicUrl(fileName);
       onDraftChange({ ...draft, avatar_url: data.publicUrl });
     } catch (err: any) {

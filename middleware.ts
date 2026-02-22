@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  const isLoginPage = request.nextUrl.pathname === '/login';
+  const isLoginPage = request.nextUrl.pathname === '/auth/login';
   const isDashboardPage = request.nextUrl.pathname === '/dashboard'; 
   const isResetPage = request.nextUrl.pathname === '/auth/reset-password';
   const hasRecoveryCode = request.nextUrl.searchParams.has('code');
@@ -46,10 +46,10 @@ export async function middleware(request: NextRequest) {
 
   if (!user) {
     if (isDashboardPage) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/auth/login', request.url));
     }
     if (isResetPage && !hasRecoveryCode) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/auth/login', request.url));
     }
   }
 

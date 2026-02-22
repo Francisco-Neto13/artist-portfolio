@@ -1,10 +1,8 @@
-"use client";
-
+import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from '@/components/shared/Navbar';
 import Footer from '@/components/shared/Footer'; 
-import { usePathname } from "next/navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,29 +16,26 @@ const geistMono = Geist_Mono({
   display: 'swap',
 });
 
+export const metadata: Metadata = {
+  title: "Atmisuki | Digital Artist Portfolio",
+  description: "Digital artist and illustrator specializing in character design and storytelling.",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pathname = usePathname();
-
-  const isLoginPage = pathname === '/login';
-
   return (
     <html lang="en" className="scroll-smooth">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 text-white flex flex-col min-h-screen`}
-      >
-        {!isLoginPage && <Navbar />}
-        
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 text-white flex flex-col min-h-screen`}>
+        <Navbar />
         <main className="flex-grow">
           {children}
         </main>
-        
         <Footer />
-        
       </body>
     </html>
   );
 }
+

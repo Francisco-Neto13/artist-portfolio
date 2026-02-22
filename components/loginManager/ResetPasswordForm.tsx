@@ -20,7 +20,7 @@ export default function ResetPasswordForm() {
       const { data: { user }, error: sessionError } = await supabase.auth.getUser();
 
       if (sessionError || !user) {
-        router.replace("/login");
+        router.replace("/auth/login");
       } else {
         setVerifying(false);
         setTimeout(() => setAnimate(true), 50);
@@ -63,10 +63,10 @@ export default function ResetPasswordForm() {
       setLoading(false);
       
       await supabase.auth.signOut();
+      router.refresh(); 
       
       setTimeout(() => {
-        router.push("/login");
-        router.refresh();
+        router.push("/auth/login");
       }, 3000);
     }
   };
@@ -107,7 +107,7 @@ export default function ResetPasswordForm() {
                 type="password"
                 required
                 placeholder="Enter new password"
-                className="w-full bg-slate-950/60 border border-white/[0.06] p-3.5 rounded-xl text-white outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition-all placeholder:text-slate-700 cursor-text"
+                className="w-full bg-slate-950/60 border border-white/[0.06] p-3.5 rounded-xl text-white outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition-all placeholder:text-slate-700"
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setError(""); }}
               />
@@ -121,15 +121,15 @@ export default function ResetPasswordForm() {
                 type="password"
                 required
                 placeholder="Confirm new password"
-                className="w-full bg-slate-950/60 border border-white/[0.06] p-3.5 rounded-xl text-white outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition-all placeholder:text-slate-700 cursor-text"
+                className="w-full bg-slate-950/60 border border-white/[0.06] p-3.5 rounded-xl text-white outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition-all placeholder:text-slate-700"
                 value={confirmPassword}
                 onChange={(e) => { setConfirmPassword(e.target.value); setError(""); }}
               />
             </div>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-[10px] font-bold flex items-center gap-2.5 animate-in fade-in duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-[10px] font-bold flex items-center gap-2.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10"></circle>
                   <line x1="12" y1="8" x2="12" y2="12"></line>
                   <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -141,34 +141,21 @@ export default function ResetPasswordForm() {
             <button 
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black py-4 rounded-xl text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-600/20 active:scale-[0.98] flex items-center justify-center gap-3 cursor-pointer"
+              className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black py-4 rounded-xl text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-600/20 active:scale-[0.98] flex items-center justify-center gap-3 cursor-pointer"
             >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                "Update Password"
-              )}
+              {loading ? "Updating..." : "Update Password"}
             </button>
           </form>
         </>
       ) : (
-        <div className="p-8 text-center animate-in fade-in zoom-in-95 duration-700">
+        <div className="p-8 text-center">
           <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           </div>
           <h3 className="text-white font-black uppercase tracking-tight text-lg mb-3">Password Updated</h3>
-          <p className="text-slate-400 text-[10px] uppercase font-bold tracking-[0.25em] leading-relaxed mb-6">
-            Your credentials have<br />been secured successfully
-          </p>
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
-            <p className="text-blue-400 text-[9px] font-black uppercase tracking-[0.25em]">Redirecting to login...</p>
-          </div>
+          <p className="text-slate-400 text-[10px] uppercase font-bold tracking-[0.25em] mb-6">Redirecting to login...</p>
         </div>
       )}
     </div>

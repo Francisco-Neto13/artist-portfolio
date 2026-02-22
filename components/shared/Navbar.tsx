@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { Menu, X } from 'lucide-react'; 
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -20,6 +22,8 @@ export default function Navbar() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  if (pathname.startsWith('/auth')) return null;
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
@@ -84,7 +88,7 @@ export default function Navbar() {
             </Link>
           ) : (
             <Link 
-              href="/login"
+              href="/auth/login"
               className="px-5 py-2 border border-white/10 bg-white/5 text-slate-400 hover:bg-blue-600 hover:border-blue-500 hover:text-white text-[10px] font-black uppercase tracking-widest rounded-full transition-all duration-500 cursor-pointer"
             >
               Admin
@@ -123,7 +127,7 @@ export default function Navbar() {
                 Dashboard
               </Link>
             ) : (
-              <Link href="/login" className="text-slate-400 text-[11px] font-black uppercase tracking-widest">
+              <Link href="/auth/login" className="text-slate-400 text-[11px] font-black uppercase tracking-widest">
                 Admin Login
               </Link>
             )}

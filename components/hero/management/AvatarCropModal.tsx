@@ -32,38 +32,45 @@ export default function AvatarCropModal({ imageSrc, onConfirm, onCancel }: Avata
     if (!completedCrop || !imgRef.current) return;
     setProcessing(true);
 
-    const canvas = document.createElement('canvas');
     const image = imgRef.current;
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
 
-    canvas.width = completedCrop.width;
-    canvas.height = completedCrop.height;
+    const cropWidth = completedCrop.width * scaleX;
+    const cropHeight = completedCrop.height * scaleY;
+
+    const outputSize = 500;
+    const canvas = document.createElement('canvas');
+    canvas.width = outputSize;
+    canvas.height = outputSize;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     ctx.drawImage(
       image,
       completedCrop.x * scaleX,
       completedCrop.y * scaleY,
-      completedCrop.width * scaleX,
-      completedCrop.height * scaleY,
+      cropWidth,
+      cropHeight,
       0, 0,
-      completedCrop.width,
-      completedCrop.height
+      outputSize,
+      outputSize
     );
 
     canvas.toBlob((blob) => {
       if (blob) onConfirm(blob);
       setProcessing(false);
-    }, 'image/webp', 0.9);
+    }, 'image/webp', 0.95);
   };
 
   return (
     <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative w-full max-w-sm bg-slate-900 border border-white/[0.06] rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-lg bg-slate-900 border border-white/[0.06] rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200">
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent rounded-t-2xl" />
 
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/[0.05]">
@@ -86,7 +93,7 @@ export default function AvatarCropModal({ imageSrc, onConfirm, onCancel }: Avata
               src={imageSrc}
               alt="Crop preview"
               onLoad={onImageLoad}
-              className="max-h-72 max-w-full object-contain"
+              className="max-h-[500px] max-w-full object-contain"
             />
           </ReactCrop>
         </div>

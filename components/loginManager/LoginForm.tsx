@@ -84,9 +84,17 @@ export default function LoginForm() {
             <div className="inline-block mb-4">
               <Link href="/" className="group block cursor-pointer">
                 <div className="relative">
-                  <div className="absolute -inset-3 bg-gradient-to-r from-blue-600/20 via-blue-400/20 to-blue-600/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="relative bg-slate-950 border border-blue-500/30 w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg group-hover:border-blue-500/60 transition-colors overflow-hidden">
-                    <Image src="/favicon.ico" alt="Logo" width={40} height={40} className="object-contain" />
+                  <div className="absolute -inset-3 bg-gradient-to-r from-blue-600/20 via-blue-400/20 to-blue-600/20 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+                  
+                  <div className="relative bg-slate-950 border border-blue-500/30 w-24 h-24 rounded-full flex items-center justify-center shadow-lg group-hover:border-blue-500/60 transition-colors overflow-hidden">
+                    <Image 
+                      src="/icon" 
+                      alt="Logo" 
+                      width={96} 
+                      height={96} 
+                      className="object-cover" 
+                      unoptimized 
+                    />
                   </div>
                 </div>
               </Link>

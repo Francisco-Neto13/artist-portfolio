@@ -1,7 +1,7 @@
 'use client'; 
 import { useEffect } from 'react'; 
 import { useUploadLogic } from './useUploadLogic'; 
-import { Artwork } from '../types'; 
+import { Artwork, ARTWORK_TITLE_MAX } from '../types'; 
 
 interface UploadModalProps { 
   isOpen: boolean; 
@@ -114,9 +114,17 @@ export default function UploadModal({ isOpen, onClose, onSuccess, editingArtwork
 
           <div className="grid grid-cols-2 gap-6"> 
             <div className="col-span-2"> 
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">Title</label> 
+              <div className="flex justify-between items-center px-1 mb-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block px-1">Title</label> 
+                <span className={`text-[9px] font-bold transition-colors ${
+                  formData.title.length >= ARTWORK_TITLE_MAX ? 'text-red-500' : 'text-slate-700'
+                }`}>
+                  {formData.title.length}/{ARTWORK_TITLE_MAX}
+                </span>
+              </div>
               <input   
                 type="text"   
+                maxLength={ARTWORK_TITLE_MAX}
                 value={formData.title}   
                 onChange={e => setFormData({...formData, title: e.target.value})}   
                 className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition-all placeholder:text-slate-800"   

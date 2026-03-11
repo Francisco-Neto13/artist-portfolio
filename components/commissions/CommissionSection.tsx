@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { getAdminStatus } from '@/lib/admin';
+import { useAdminStatus } from '@/components/providers/AdminStatusProvider';
+import { getLatestProfile, invalidateLatestProfileCache } from '@/lib/profile';
 import { Commission, CommissionStatus } from './types';
 import EditCommissionModal from './management/EditCommissionModal';
 import CommissionHeader from './management/CommissionHeader';
@@ -10,18 +11,14 @@ import CommissionContact from './display/CommissionContact';
 import CommissionDeleteModal from './display/CommissionDeleteModal';
 
 export default function CommissionSection() {
+  const { isAdmin } = useAdminStatus();
   const [commissions, setCommissions] = useState<Commission[]>([]);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [socialLinks, setSocialLinks] = useState<{instagram: string, twitter: string, mail: string} | null>(null);
   const [status, setStatus] = useState<CommissionStatus>('open');
   const [editingCommission, setEditingCommission] = useState<Commission | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<{id: number, message: string, type: 'success' | 'warning'}[]>([]);
-
-  const checkAdmin = async () => {
-    setIsAdmin(await getAdminStatus());
-  };
 
   const pushToast = (message: string, type: 'success' | 'warning' = 'success') => {
     const id = Date.now();
@@ -30,14 +27,13 @@ export default function CommissionSection() {
   };
 
   const fetchData = async () => {
-    const { data: tiers } = await supabase.from('commission_tiers').select('*').order('order_index', { ascending: true });
+    const [{ data: tiers }, profile] = await Promise.all([
+      supabase.from('commission_tiers').select('*').order('order_index', { ascending: true }),
+      getLatestProfile(),
+    ]);
+
     if (tiers) setCommissions(tiers);
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id, commission_status, social_links')
-      .order('updated_at', { ascending: false, nullsFirst: false })
-      .limit(1)
-      .maybeSingle();
+
     if (profile) {
       setActiveProfileId(profile.id);
       if (profile.commission_status) setStatus(profile.commission_status);
@@ -81,10 +77,17 @@ export default function CommissionSection() {
     const cycle: Record<CommissionStatus, CommissionStatus> = { open: 'closed', closed: 'waitlist', waitlist: 'open' };
     const newStatus = cycle[status];
     await supabase.from('profiles').update({ commission_status: newStatus }).eq('id', activeProfileId);
+    invalidateLatestProfileCache();
     setStatus(newStatus);
   };
 
-  useEffect(() => { fetchData(); checkAdmin(); }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void fetchData();
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <section id="commissions" className="relative min-h-screen bg-slate-950 border-t border-white/[0.03]">

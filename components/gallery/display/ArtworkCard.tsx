@@ -67,9 +67,12 @@ export default function ArtworkCard({ art, onClick, isAdmin, onEdit, onDelete }:
         )}
 
         <div className="relative overflow-hidden rounded-lg md:rounded-2xl bg-slate-900 transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(59,130,246,0.15)]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={getOptimizedUrl(art.image_url, 85, 800)}
             alt={art.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
           />
         </div>
@@ -108,7 +111,7 @@ export default function ArtworkCard({ art, onClick, isAdmin, onEdit, onDelete }:
               </div>
               <h3 className="text-white text-sm font-semibold tracking-wide mb-1">Delete artwork?</h3>
               <p className="text-slate-500 text-xs leading-relaxed">
-                You're about to delete <span className="text-slate-300 font-medium">"{art.title}"</span>.
+                You&apos;re about to delete <span className="text-slate-300 font-medium">&quot;{art.title}&quot;</span>.
               </p>
             </div>
             <div className="px-6 pb-6 flex gap-2">

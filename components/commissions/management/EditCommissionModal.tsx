@@ -62,8 +62,9 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
 
       const { data } = supabase.storage.from('gallery').getPublicUrl(`commissions/${fileName}`);
       setDraft(prev => ({ ...prev, image_url: data.publicUrl }));
-    } catch (err: any) {
-      console.error('Upload failed:', err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      console.error('Upload failed:', message);
     } finally {
       setIsUploading(false);
     }

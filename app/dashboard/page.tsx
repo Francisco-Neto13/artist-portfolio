@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { getAdminStatus } from '@/lib/admin';
 import AdminSettings from '@/components/admin/display/AdminSettings';
 import { LogOut, ArrowLeft, ShieldCheck } from 'lucide-react';
 
@@ -19,12 +18,6 @@ export default function DashboardPage() {
         router.push('/auth/login');
         return;
       }
-      const isAdmin = await getAdminStatus();
-      if (!isAdmin) {
-        router.push('/');
-        return;
-      }
-
       setUserName(user.email);
     };
     

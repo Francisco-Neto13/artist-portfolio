@@ -90,7 +90,7 @@ async function convertOnMainThread(file: File, maxDim: number): Promise<Conversi
     const canvas = useOffscreen
       ? new OffscreenCanvas(width, height)
       : Object.assign(document.createElement('canvas'), { width, height });
-    const ctx = canvas.getContext('2d') as any;
+    const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Could not get canvas context.');
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';

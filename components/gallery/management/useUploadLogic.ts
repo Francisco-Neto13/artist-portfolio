@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Artwork, ArtworkCategory, ArtworkType } from '../types';
 import { convertToWebP } from '@/lib/imageUtils'; 
@@ -15,14 +15,28 @@ export function useUploadLogic(
   onClose: () => void,
   editingArtwork?: Artwork | null
 ) {
+  const previewBlobUrlRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrlState] = useState<string | null>(null);
   const [isOptimized, setIsOptimized] = useState(false);
   const [availableCategories, setAvailableCategories] = useState<ArtworkCategory[]>([]);
   const [availableTypes, setAvailableTypes] = useState<ArtworkType[]>([]);
   const [formData, setFormData] = useState({ title: '', category: '', type: '' });
+
+  const setPreviewUrl = useCallback((nextUrl: string | null) => {
+    if (previewBlobUrlRef.current && previewBlobUrlRef.current !== nextUrl) {
+      URL.revokeObjectURL(previewBlobUrlRef.current);
+      previewBlobUrlRef.current = null;
+    }
+
+    if (nextUrl && nextUrl.startsWith('blob:')) {
+      previewBlobUrlRef.current = nextUrl;
+    }
+
+    setPreviewUrlState(nextUrl);
+  }, []);
 
   const fetchMetadata = useCallback(async () => {
     const [catRes, typeRes] = await Promise.all([
@@ -38,22 +52,42 @@ export function useUploadLogic(
   }, [fetchMetadata]);
 
   const resetForm = useCallback(() => {
+    if (previewBlobUrlRef.current) {
+      URL.revokeObjectURL(previewBlobUrlRef.current);
+      previewBlobUrlRef.current = null;
+    }
+
     setFile(null);
-    setPreviewUrl(null);
+    setPreviewUrlState(null);
     setIsOptimized(false);
     setUploadProgress(0);
     setFormData({ title: '', category: '', type: '' });
   }, []);
 
   const handleFileChange = useCallback((selectedFile: File) => {
+    if (previewBlobUrlRef.current) {
+      URL.revokeObjectURL(previewBlobUrlRef.current);
+      previewBlobUrlRef.current = null;
+    }
+
     setFile(selectedFile);
     const url = URL.createObjectURL(selectedFile);
-    setPreviewUrl(url);
+    previewBlobUrlRef.current = url;
+    setPreviewUrlState(url);
 
     const img = new Image();
     img.src = url;
     img.onload = () => {
       setIsOptimized(img.width > 2048 || img.height > 2048);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (previewBlobUrlRef.current) {
+        URL.revokeObjectURL(previewBlobUrlRef.current);
+        previewBlobUrlRef.current = null;
+      }
     };
   }, []);
 

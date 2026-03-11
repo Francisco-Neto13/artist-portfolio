@@ -82,9 +82,10 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
 
       const { data } = supabase.storage.from('perfil').getPublicUrl(fileName);
       onDraftChange({ ...draft, avatar_url: data.publicUrl });
-    } catch (err: any) {
-      console.error('Avatar upload failed:', err.message);
-      alert('Upload failed: ' + err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      console.error('Avatar upload failed:', message);
+      alert('Upload failed: ' + message);
     } finally {
       setAvatarUploading(false);
     }

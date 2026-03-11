@@ -2,39 +2,24 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
-import { getAdminStatus } from '@/lib/admin';
+import { useAdminStatus } from '@/components/providers/AdminStatusProvider';
+import { getLatestProfile } from '@/lib/profile';
 import { Menu, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
-  const [isAdmin, setIsAdmin] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [profileName, setProfileName] = useState<string>('');
+  const { isAdmin } = useAdminStatus();
   const pathname = usePathname();
 
   useEffect(() => {
-    const syncAdminStatus = async () => {
-      setIsAdmin(await getAdminStatus());
+    const loadProfileName = async () => {
+      const profile = await getLatestProfile();
+      if (profile?.full_name) setProfileName(profile.full_name.toUpperCase());
     };
 
-    syncAdminStatus();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      void syncAdminStatus();
-    });
-
-    supabase
-      .from('profiles')
-      .select('full_name')
-      .order('updated_at', { ascending: false, nullsFirst: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-      if (data?.full_name) setProfileName(data.full_name.toUpperCase());
-      });
-
-    return () => subscription.unsubscribe();
+    void loadProfileName();
   }, []);
 
   if (pathname.startsWith('/auth') || pathname.startsWith('/dashboard')) return null;

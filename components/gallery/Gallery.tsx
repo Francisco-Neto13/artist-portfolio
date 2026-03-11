@@ -1,7 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
-import { getAdminStatus } from '@/lib/admin';
+import { useAdminStatus } from '@/components/providers/AdminStatusProvider';
 import { Artwork, ArtworkCategory, ArtworkType } from '@/components/gallery/types';
 import UploadModal from '@/components/gallery/management/UploadModal';
 import MetadataManager from '@/components/gallery/management/MetadataManager';
@@ -11,13 +11,13 @@ import GalleryFilters from '@/components/gallery/display/GalleryFilters';
 import GalleryGrid from '@/components/gallery/display/GalleryGrid';
 
 export default function Gallery() {
+  const { isAdmin } = useAdminStatus();
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [selectedType, setSelectedType] = useState('All Themes');
   const [searchQuery, setSearchQuery] = useState('');
   const [dbCategories, setDbCategories] = useState<ArtworkCategory[]>([]);
   const [dbTypes, setDbTypes] = useState<ArtworkType[]>([]);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
@@ -25,25 +25,27 @@ export default function Gallery() {
   const [managerConfig, setManagerConfig] = useState<{ open: boolean; type: 'category' | 'theme' }>({ open: false, type: 'category' });
   const [storageRefresh, setStorageRefresh] = useState(0);
 
-  const fetchArtworks = async () => {
+  const fetchArtworks = useCallback(async () => {
     const { data } = await supabase.from('artworks').select('*').order('created_at', { ascending: false });
     if (data) setArtworks(data);
-  };
+  }, []);
 
-  const fetchMetadata = async () => {
+  const fetchMetadata = useCallback(async () => {
     const [catRes, typeRes] = await Promise.all([
       supabase.from('artwork_categories').select('*').order('name'),
       supabase.from('artwork_types').select('*').order('name')
     ]);
     if (catRes.data) setDbCategories(catRes.data);
     if (typeRes.data) setDbTypes(typeRes.data);
-  };
+  }, []);
 
   useEffect(() => {
-    fetchArtworks();
-    fetchMetadata();
-    getAdminStatus().then(setIsAdmin);
-  }, []);
+    const load = async () => {
+      await Promise.all([fetchArtworks(), fetchMetadata()]);
+    };
+
+    void load();
+  }, [fetchArtworks, fetchMetadata]);
 
   const handleAddItem = async (table: 'artwork_categories' | 'artwork_types', name: string) => {
     await supabase.from(table).insert([{ name }]);
@@ -64,16 +66,20 @@ export default function Gallery() {
     return count ?? 0;
   };
 
-  const filteredArt = artworks.filter(art => {
-    const catMatch = selectedCategory === 'All Categories' || art.category === selectedCategory;
-    const typeMatch = selectedType === 'All Themes' || art.type === selectedType;
-    const searchMatch = searchQuery.trim() === '' || (
-      art.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      art.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      art.type?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    return catMatch && typeMatch && searchMatch;
-  });
+  const filteredArt = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return artworks.filter((art) => {
+      const catMatch = selectedCategory === 'All Categories' || art.category === selectedCategory;
+      const typeMatch = selectedType === 'All Themes' || art.type === selectedType;
+      const searchMatch = normalizedQuery === '' || (
+        art.title?.toLowerCase().includes(normalizedQuery) ||
+        art.category?.toLowerCase().includes(normalizedQuery) ||
+        art.type?.toLowerCase().includes(normalizedQuery)
+      );
+      return catMatch && typeMatch && searchMatch;
+    });
+  }, [artworks, searchQuery, selectedCategory, selectedType]);
 
   const handleNavigate = (direction: 'prev' | 'next') => {
     const newIndex = direction === 'next'
@@ -116,7 +122,6 @@ export default function Gallery() {
       <MetadataManager
         isOpen={managerConfig.open}
         onClose={() => setManagerConfig({ ...managerConfig, open: false })}
-        title={managerConfig.type === 'category' ? 'Categories' : 'Themes'}
         items={managerConfig.type === 'category' ? dbCategories : dbTypes}
         onAdd={(n) => handleAddItem(managerConfig.type === 'category' ? 'artwork_categories' : 'artwork_types', n)}
         onRemove={(id, n) => handleRemoveItem(managerConfig.type === 'category' ? 'artwork_categories' : 'artwork_types', id, n)}

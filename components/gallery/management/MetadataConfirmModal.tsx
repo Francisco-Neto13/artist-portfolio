@@ -30,8 +30,8 @@ export default function MetadataConfirmModal({ confirmState, activeType, onConfi
           </div>
           <h3 className="text-white text-sm font-semibold tracking-wide mb-1">Delete {activeType}?</h3>
           <p className="text-slate-500 text-xs leading-relaxed">
-            You're about to delete{' '}
-            <span className="text-slate-300 font-medium">"{confirmState.name}"</span>.
+            You&apos;re about to delete{' '}
+            <span className="text-slate-300 font-medium">&quot;{confirmState.name}&quot;</span>.
             This action cannot be undone.
           </p>
           {confirmState.artworkCount !== undefined && confirmState.artworkCount > 0 && (

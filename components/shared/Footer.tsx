@@ -1,5 +1,3 @@
-"use client";
-
 import { Github, Instagram } from 'lucide-react';
 
 export default function Footer() {

@@ -100,6 +100,7 @@ export default function AvatarCropModal({ imageSrc, onConfirm, onCancel }: Avata
             aspect={1}
             circularCrop
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               ref={imgRef}
               src={imageSrc}

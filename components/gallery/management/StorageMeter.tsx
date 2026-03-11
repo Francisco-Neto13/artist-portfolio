@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 
 const MAX_STORAGE = 1 * 1024 * 1024 * 1024;
 
-export default function StorageMeter({ refreshTrigger }: { refreshTrigger?: any }) {
+export default function StorageMeter({ refreshTrigger }: { refreshTrigger?: unknown }) {
   const [usage, setUsage] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 

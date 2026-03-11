@@ -8,7 +8,6 @@ import MetadataList from './MetadataList';
 interface MetadataManagerProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
   items: { id: string; name: string }[];
   onAdd: (name: string) => Promise<void>;
   onRemove: (id: string, name: string) => Promise<void>;
@@ -18,7 +17,7 @@ interface MetadataManagerProps {
 }
 
 export default function MetadataManager({
-  isOpen, onClose, title, items, onAdd, onRemove,
+  isOpen, onClose, items, onAdd, onRemove,
   onSwitchType, activeType = 'category', onCheckCount
 }: MetadataManagerProps) {
   const [newName, setNewName] = useState('');
@@ -64,8 +63,8 @@ export default function MetadataManager({
     try {
       await onRemove(id, name);
       pushToast(`"${name}" was removed.`, 'warning');
-    } catch (err: any) {
-      if (err?.message?.startsWith('in_use')) {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message.startsWith('in_use')) {
         const count = err.message.split(':')[1];
         pushToast(`"${name}" is linked to ${count} artwork${Number(count) !== 1 ? 's' : ''} and cannot be deleted.`, 'error');
       } else {

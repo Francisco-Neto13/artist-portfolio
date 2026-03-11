@@ -17,7 +17,7 @@ export default function EditAvatarSection({ avatarUrl, uploading, onChange }: Pr
         )}
         <div className={`w-20 h-20 rounded-full bg-slate-800 border border-white/[0.06] overflow-hidden relative flex items-center justify-center transition-all duration-300 ${uploading ? 'scale-90 brightness-50' : 'hover:border-blue-500/30'}`}>
           {avatarUrl ? (
-            <Image src={avatarUrl} alt="Avatar" fill priority sizes="80px" className={`object-cover transition-all duration-500 ${uploading ? 'blur-sm scale-110' : ''}`} />
+            <Image src={avatarUrl} alt="Avatar" fill priority unoptimized sizes="80px" className={`object-cover transition-all duration-500 ${uploading ? 'blur-sm scale-110' : ''}`} />
           ) : (
             <Camera size={24} className="text-slate-600" />
           )}

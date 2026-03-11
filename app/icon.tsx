@@ -59,6 +59,7 @@ export default async function Icon() {
     (
       <div style={{ width: 128, height: 128, borderRadius: '50%', overflow: 'hidden', display: 'flex', background: '#0f172a' }}>
         {imageData ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img alt="" src={imageData} width={128} height={128} style={{ width: 128, height: 128, objectFit: 'cover' }} />
         ) : (
           <div style={{ width: 128, height: 128, background: '#3b82f6' }} />

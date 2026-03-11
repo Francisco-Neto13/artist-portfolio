@@ -2,14 +2,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Pencil } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { getAdminStatus } from '@/lib/admin';
+import { useAdminStatus } from '@/components/providers/AdminStatusProvider';
+import { getLatestProfile, invalidateLatestProfileCache } from '@/lib/profile';
 import { ProfileData, DEFAULT_PROFILE } from './types';
 import HeroContent from './display/HeroContent';
 import EditPanel from './management/EditPanel';
 import InfoModal from './display/InfoModal';
 
 export default function Hero() {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin } = useAdminStatus();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeModal, setActiveModal] = useState<null | 'languages' | 'hobbies'>(null);
@@ -20,14 +21,21 @@ export default function Hero() {
 
   useEffect(() => {
     const load = async () => {
-      setIsAdmin(await getAdminStatus());
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('updated_at', { ascending: false, nullsFirst: false })
-        .limit(1)
-        .maybeSingle();
-      if (data) { setProfile(data); setDraft(data); }
+      const data = await getLatestProfile();
+      if (data) {
+        const nextProfile: ProfileData = {
+          ...DEFAULT_PROFILE,
+          ...data,
+          social_links: {
+            ...DEFAULT_PROFILE.social_links,
+            ...data.social_links,
+          },
+          languages: data.languages ?? [],
+          hobbies: data.hobbies ?? [],
+        };
+        setProfile(nextProfile);
+        setDraft(nextProfile);
+      }
       setProfileLoaded(true);
     };
     load();
@@ -58,10 +66,12 @@ export default function Hero() {
         id: targetProfileId, ...draft, updated_at: new Date().toISOString(),
       });
       if (error) throw error;
+      invalidateLatestProfileCache();
       setProfile({ ...draft, id: targetProfileId });
       setIsEditing(false);
-    } catch (err: any) {
-      console.error('Save failed:', err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      console.error('Save failed:', message);
     } finally {
       setIsSaving(false);
     }

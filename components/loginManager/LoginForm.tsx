@@ -18,11 +18,11 @@ export default function LoginForm() {
   const router = useRouter();
 
   useEffect(() => {
-    setMounted(true);
+    const mountTimer = setTimeout(() => setMounted(true), 0);
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      const isAdmin = await getAdminStatus();
+      const isAdmin = await getAdminStatus({ forceRefresh: true });
       if (isAdmin) {
         router.replace("/dashboard");
         return;
@@ -31,7 +31,9 @@ export default function LoginForm() {
       await supabase.auth.signOut();
       setError("This account does not have admin access.");
     };
-    checkSession();
+    void checkSession();
+
+    return () => clearTimeout(mountTimer);
   }, [router]);
 
   const reveal = (delay = "") =>
@@ -58,7 +60,7 @@ export default function LoginForm() {
         return;
       }
       if (data.session) {
-        const isAdmin = await getAdminStatus();
+        const isAdmin = await getAdminStatus({ forceRefresh: true });
         if (!isAdmin) {
           await supabase.auth.signOut();
           setError("This account does not have admin access.");

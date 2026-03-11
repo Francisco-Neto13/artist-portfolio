@@ -16,10 +16,10 @@ export default function ArtworkLightbox({ artwork, index, total, onClose, onNavi
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const mountTimer = window.setTimeout(() => setMounted(true), 0);
     document.body.style.overflow = 'hidden';
     return () => {
-      setMounted(false);
+      clearTimeout(mountTimer);
       document.body.style.overflow = 'unset';
     };
   }, []);
@@ -45,6 +45,7 @@ export default function ArtworkLightbox({ artwork, index, total, onClose, onNavi
         </div>
 
         <div className="relative w-full h-[60vh] md:h-[70vh] bg-black/40 flex items-center justify-center overflow-hidden p-4 md:p-10">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
             src={getOptimizedUrl(artwork.image_url, 95, 1600)} 
             alt={artwork.title}

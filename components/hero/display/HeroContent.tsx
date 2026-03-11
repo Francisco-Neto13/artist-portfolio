@@ -61,7 +61,7 @@ export default function HeroContent({ profile, displayText, onOpenModal }: HeroC
         </div>
 
         <h1 className="text-3xl md:text-7xl font-bold tracking-tighter flex flex-wrap justify-center gap-x-3 md:gap-x-4 leading-none">
-          <span className="text-white">Hi, I'm</span>
+          <span className="text-white">Hi, I&apos;m</span>
           <span className="text-blue-500 inline-flex items-center">
             {displayText}
             {displayText.length < (profile.full_name?.length || 0) && (
@@ -71,7 +71,7 @@ export default function HeroContent({ profile, displayText, onOpenModal }: HeroC
         </h1>
 
         <p className="text-slate-400 text-sm md:text-lg leading-relaxed italic px-2">
-          "{profile.bio}"
+          &quot;{profile.bio}&quot;
         </p>
 
         <div className="grid grid-cols-2 gap-2 md:gap-3 w-full max-w-md mt-1 md:mt-2">
@@ -88,7 +88,7 @@ export default function HeroContent({ profile, displayText, onOpenModal }: HeroC
                 <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 mb-0.5 md:mb-1">{type}</p>
                 <p className="text-slate-300 text-[11px] md:text-xs font-medium truncate">
                   {profile[type]?.length > 0
-                    ? profile[type].slice(0, 2).map((i: any) => i.label).join(', ') + (profile[type].length > 2 ? '...' : '')
+                    ? profile[type].slice(0, 2).map((i) => i.label).join(', ') + (profile[type].length > 2 ? '...' : '')
                     : 'Nothing added yet'}
                 </p>
               </div>

@@ -15,7 +15,9 @@ export default function ResetPasswordForm() {
   const router = useRouter();
 
   useEffect(() => {
-    setMounted(true);
+    const mountTimer = setTimeout(() => setMounted(true), 0);
+    let revealTimer: ReturnType<typeof setTimeout> | null = null;
+
     const checkSession = async () => {
       const { data: { user }, error: sessionError } = await supabase.auth.getUser();
 
@@ -23,11 +25,16 @@ export default function ResetPasswordForm() {
         router.replace("/auth/login");
       } else {
         setVerifying(false);
-        setTimeout(() => setAnimate(true), 50);
+        revealTimer = setTimeout(() => setAnimate(true), 50);
       }
     };
 
-    checkSession();
+    void checkSession();
+
+    return () => {
+      clearTimeout(mountTimer);
+      if (revealTimer) clearTimeout(revealTimer);
+    };
   }, [router]);
 
   const reveal = (delay = "") =>

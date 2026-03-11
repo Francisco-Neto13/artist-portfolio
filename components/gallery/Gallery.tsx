@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getAdminStatus } from '@/lib/admin';
 import { Artwork, ArtworkCategory, ArtworkType } from '@/components/gallery/types';
 import UploadModal from '@/components/gallery/management/UploadModal';
 import MetadataManager from '@/components/gallery/management/MetadataManager';
@@ -41,7 +42,7 @@ export default function Gallery() {
   useEffect(() => {
     fetchArtworks();
     fetchMetadata();
-    supabase.auth.getSession().then(({ data: { session } }) => setIsAdmin(!!session));
+    getAdminStatus().then(setIsAdmin);
   }, []);
 
   const handleAddItem = async (table: 'artwork_categories' | 'artwork_types', name: string) => {

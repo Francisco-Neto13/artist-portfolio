@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Pencil } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { getAdminStatus } from '@/lib/admin';
 import { ProfileData, DEFAULT_PROFILE } from './types';
 import HeroContent from './display/HeroContent';
 import EditPanel from './management/EditPanel';
@@ -19,9 +20,13 @@ export default function Hero() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAdmin(!!session);
-      const { data } = await supabase.from('profiles').select('*').single();
+      setIsAdmin(await getAdminStatus());
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('updated_at', { ascending: false, nullsFirst: false })
+        .limit(1)
+        .maybeSingle();
       if (data) { setProfile(data); setDraft(data); }
       setProfileLoaded(true);
     };
@@ -48,11 +53,12 @@ export default function Hero() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) return;
+      const targetProfileId = profile.id ?? draft.id ?? session.user.id;
       const { error } = await supabase.from('profiles').upsert({
-        id: session.user.id, ...draft, updated_at: new Date().toISOString(),
+        id: targetProfileId, ...draft, updated_at: new Date().toISOString(),
       });
       if (error) throw error;
-      setProfile(draft);
+      setProfile({ ...draft, id: targetProfileId });
       setIsEditing(false);
     } catch (err: any) {
       console.error('Save failed:', err.message);

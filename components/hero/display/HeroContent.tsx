@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { Instagram, Twitter, Mail, MapPin, Languages, Palette } from 'lucide-react';
 import { ProfileData } from '../types';
+import { safeMailto, safeSocialUrl } from '@/lib/safeLinks';
 
 interface HeroContentProps {
   profile: ProfileData;
@@ -32,15 +33,16 @@ export default function HeroContent({ profile, displayText, onOpenModal }: HeroC
 
         <div className="flex gap-2 md:gap-3">
           {(['instagram', 'twitter', 'mail'] as const).map((s) => {
-            const isMail = s === 'mail';
-            const link = profile.social_links[s];
+            const rawLink = profile.social_links[s];
+            const href = s === 'mail' ? safeMailto(rawLink) : safeSocialUrl(rawLink);
+            if (!href) return null;
             
             return (
               <a
                 key={s}
-                href={isMail && !link.includes('mailto:') ? `mailto:${link}` : link}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={href}
+                target={s === 'mail' ? undefined : '_blank'}
+                rel={s === 'mail' ? undefined : 'noopener noreferrer'}
                 className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-blue-600/8 border border-blue-500/15 hover:border-blue-500/50 hover:bg-blue-600/20 flex items-center justify-center text-blue-400/70 hover:text-blue-400 transition-all"
               >
                 {s === 'instagram' && <Instagram size={15} />}

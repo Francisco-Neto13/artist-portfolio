@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { isAdminUserId } from '@/lib/admin/server';
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -37,10 +38,18 @@ export async function middleware(request: NextRequest) {
   const isDashboardPage = request.nextUrl.pathname === '/dashboard'; 
   const isResetPage = request.nextUrl.pathname === '/auth/reset-password';
   const hasRecoveryCode = request.nextUrl.searchParams.has('code');
+  const isAdmin = isAdminUserId(user?.id);
 
   if (user) {
-    if (isLoginPage || (isResetPage && !hasRecoveryCode)) {
-      return NextResponse.redirect(new URL('/dashboard', request.url)); 
+    if (isLoginPage) {
+      if (isAdmin) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
+      return response;
+    }
+
+    if (isResetPage && !hasRecoveryCode) {
+      return NextResponse.redirect(new URL(isAdmin ? '/dashboard' : '/', request.url));
     }
   }
 
@@ -51,6 +60,10 @@ export async function middleware(request: NextRequest) {
     if (isResetPage && !hasRecoveryCode) {
       return NextResponse.redirect(new URL('/auth/login', request.url));
     }
+  }
+
+  if (user && !isAdmin && isDashboardPage) {
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return response;

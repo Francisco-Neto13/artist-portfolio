@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase"; 
+import { getAdminStatus } from "@/lib/admin";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,7 +21,15 @@ export default function LoginForm() {
     setMounted(true);
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) router.replace("/");
+      if (!session) return;
+      const isAdmin = await getAdminStatus();
+      if (isAdmin) {
+        router.replace("/dashboard");
+        return;
+      }
+
+      await supabase.auth.signOut();
+      setError("This account does not have admin access.");
     };
     checkSession();
   }, [router]);
@@ -49,7 +58,15 @@ export default function LoginForm() {
         return;
       }
       if (data.session) {
-        router.replace("/");
+        const isAdmin = await getAdminStatus();
+        if (!isAdmin) {
+          await supabase.auth.signOut();
+          setError("This account does not have admin access.");
+          setLoading(false);
+          return;
+        }
+
+        router.replace("/dashboard");
         router.refresh();
       }
     } catch {

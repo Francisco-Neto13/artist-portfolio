@@ -6,6 +6,24 @@ export const size = { width: 128, height: 128 };
 export const contentType = 'image/png';
 export const revalidate = 300;
 
+function isSafeAvatarUrl(raw?: string | null): raw is string {
+  if (!raw) return false;
+
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const allowedHost = new URL(supabaseUrl).hostname;
+    const parsed = new URL(raw);
+
+    return (
+      parsed.protocol === 'https:' &&
+      parsed.hostname === allowedHost &&
+      parsed.pathname.startsWith('/storage/v1/object/public/perfil/')
+    );
+  } catch {
+    return false;
+  }
+}
+
 export default async function Icon() {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,13 +33,15 @@ export default async function Icon() {
   const { data } = await supabase
     .from('profiles')
     .select('avatar_url')
-    .single();
+    .order('updated_at', { ascending: false, nullsFirst: false })
+    .limit(1)
+    .maybeSingle();
 
   let imageData: string | null = null;
 
-  if (data?.avatar_url) {
+  if (isSafeAvatarUrl(data?.avatar_url)) {
     try {
-      const res = await fetch(data.avatar_url);
+      const res = await fetch(data.avatar_url, { cache: 'force-cache' });
       const buffer = await res.arrayBuffer();
       const pngBuffer = await sharp(Buffer.from(buffer))
         .resize(128, 128)
@@ -39,7 +59,7 @@ export default async function Icon() {
     (
       <div style={{ width: 128, height: 128, borderRadius: '50%', overflow: 'hidden', display: 'flex', background: '#0f172a' }}>
         {imageData ? (
-          <img src={imageData} width={128} height={128} style={{ width: 128, height: 128, objectFit: 'cover' }} />
+          <img alt="" src={imageData} width={128} height={128} style={{ width: 128, height: 128, objectFit: 'cover' }} />
         ) : (
           <div style={{ width: 128, height: 128, background: '#3b82f6' }} />
         )}

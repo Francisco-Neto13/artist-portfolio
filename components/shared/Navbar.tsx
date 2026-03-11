@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { getAdminStatus } from '@/lib/admin';
 import { Menu, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -13,17 +14,25 @@ export default function Navbar() {
   const pathname = usePathname();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAdmin(!!session);
+    const syncAdminStatus = async () => {
+      setIsAdmin(await getAdminStatus());
+    };
+
+    syncAdminStatus();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      void syncAdminStatus();
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAdmin(!!session);
-    });
-
-    supabase.from('profiles').select('full_name').single().then(({ data }) => {
+    supabase
+      .from('profiles')
+      .select('full_name')
+      .order('updated_at', { ascending: false, nullsFirst: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
       if (data?.full_name) setProfileName(data.full_name.toUpperCase());
-    });
+      });
 
     return () => subscription.unsubscribe();
   }, []);

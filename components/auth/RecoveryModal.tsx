@@ -1,33 +1,34 @@
-"use client"
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface RecoveryModalProps {
   onClose: () => void;
 }
 
 export default function RecoveryModal({ onClose }: RecoveryModalProps) {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [animate, setAnimate] = useState(false);
-  const [isBlocked, setIsBlocked] = useState(false); 
+  const [isBlocked, setIsBlocked] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setAnimate(true), 10);
     return () => clearTimeout(timer);
   }, []);
 
-  const reveal = (delay = "") =>
+  const reveal = (delay = '') =>
     `transition-all duration-500 ease-out ${delay} ${
-      animate ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-4 scale-[0.98]"
+      animate ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-[0.98]'
     }`;
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError('');
 
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/reset-password`,
@@ -36,11 +37,11 @@ export default function RecoveryModal({ onClose }: RecoveryModalProps) {
     setLoading(false);
 
     if (resetError) {
-      if (resetError.status === 429 || resetError.message.includes("rate limit")) {
-        setError("Too many attempts. Please wait a few minutes before trying again.");
+      if (resetError.status === 429 || resetError.message.includes('rate limit')) {
+        setError('Too many attempts. Please wait a few minutes before trying again.');
         setIsBlocked(true);
       } else {
-        setError("Could not send link. Check the email address.");
+        setError('Could not send link. Check the email address.');
       }
     } else {
       setSent(true);
@@ -48,10 +49,10 @@ export default function RecoveryModal({ onClose }: RecoveryModalProps) {
   };
 
   return (
-    <div className={`fixed inset-0 z-[600] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm transition-opacity duration-300 ${animate ? "opacity-100" : "opacity-0"}`}>
+    <div className={`fixed inset-0 z-[600] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm transition-opacity duration-300 ${animate ? 'opacity-100' : 'opacity-0'}`}>
       <div className="absolute inset-0 cursor-pointer" onClick={onClose} />
-      
-      <div 
+
+      <div
         className={`relative bg-slate-900/90 border border-white/[0.06] rounded-2xl max-w-md w-full shadow-2xl overflow-hidden ${reveal()}`}
         style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.04), 0 32px 64px rgba(0,0,0,0.8)' }}
       >
@@ -77,14 +78,17 @@ export default function RecoveryModal({ onClose }: RecoveryModalProps) {
                 <label className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500 block mb-2 ml-1">
                   Email Address
                 </label>
-                <input 
+                <input
                   type="email"
                   required
                   placeholder="your@email.com"
                   className="w-full bg-slate-950/60 border border-white/[0.06] p-3.5 rounded-xl text-white text-sm outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition-all placeholder:text-slate-700 cursor-text disabled:opacity-50"
                   value={email}
-                  disabled={isBlocked && loading} 
-                  onChange={(e) => { setEmail(e.target.value); setError(""); }}
+                  disabled={isBlocked && loading}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setError('');
+                  }}
                 />
               </div>
 
@@ -100,21 +104,21 @@ export default function RecoveryModal({ onClose }: RecoveryModalProps) {
               )}
 
               <div className="flex gap-2 pt-2">
-                <button 
+                <button
                   type="button"
                   onClick={onClose}
                   className="flex-1 py-3 border border-white/10 hover:border-white/20 text-slate-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
-                  disabled={loading || isBlocked} 
+                  disabled={loading || isBlocked}
                   className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {loading ? (
                     <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                  ) : isBlocked ? "Blocked" : "Send Link"}
+                  ) : isBlocked ? 'Blocked' : 'Send Link'}
                 </button>
               </div>
             </form>
@@ -133,7 +137,7 @@ export default function RecoveryModal({ onClose }: RecoveryModalProps) {
               <span className="text-blue-400">{email.toLowerCase()}</span><br />
               you will receive a link shortly
             </p>
-            <button 
+            <button
               onClick={onClose}
               className="w-full bg-slate-800 hover:bg-slate-750 text-white py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all cursor-pointer"
             >

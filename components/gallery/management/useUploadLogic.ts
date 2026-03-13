@@ -151,26 +151,9 @@ export function useUploadLogic(
     }
   };
 
-  const addItem = async (table: 'artwork_categories' | 'artwork_types', name: string) => {
-    const { error } = await supabase.from(table).insert([{ name }]);
-    if (!error) fetchMetadata();
-  };
-
-  const removeItem = async (table: 'artwork_categories' | 'artwork_types', id: string, name: string) => {
-    const column = table === 'artwork_categories' ? 'category' : 'type';
-    const { count } = await supabase
-      .from('artworks')
-      .select('*', { count: 'exact', head: true })
-      .eq(column, name);
-    if (count && count > 0) throw new Error(`in_use:${count}`);
-    const { error } = await supabase.from(table).delete().eq('id', id);
-    if (error) throw error;
-    fetchMetadata();
-  };
-
   return {
     file, handleFileChange, previewUrl, setPreviewUrl, isOptimized,
     formData, setFormData, loading, uploadProgress, handleUpload,
-    resetForm, availableCategories, availableTypes, addItem, removeItem,
+    resetForm, availableCategories, availableTypes,
   };
 }

@@ -1,5 +1,4 @@
 'use client';
-import { useRef } from 'react';
 import { Pencil } from 'lucide-react';
 import { ArtworkCategory, ArtworkType } from '@/components/gallery/types';
 import StorageMeter from '@/components/gallery/management/StorageMeter';
@@ -24,13 +23,10 @@ export default function GalleryFilters({
   searchQuery, filteredCount, isAdmin, storageRefresh,
   onCategoryChange, onTypeChange, onSearchChange, onOpenManager
 }: GalleryFiltersProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
   return (
     <>
       <div className="mb-6 md:mb-16">
         <div
-          ref={scrollRef}
           className="flex items-center gap-6 md:gap-10 overflow-x-auto select-none cursor-grab active:cursor-grabbing gallery-scrollbar pb-2 border-b border-white/5"
         >
           {['All Categories', ...categories.map(c => c.name)].map(cat => (

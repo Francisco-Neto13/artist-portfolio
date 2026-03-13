@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { CheckCircle2, AlertCircle, ShieldCheck, ShieldAlert, Eye, EyeOff } from 'lucide-react';
 import { EmailForm } from '../management/EmailForm';
 import { PasswordForm } from '../management/PasswordForm';
-import { ADMIN_PASSWORD_MAX } from '../types'; // Importando a constante
+import { ADMIN_PASSWORD_MAX } from '../types';
 
 export default function AdminSettings() {
   const [currentEmail, setCurrentEmail] = useState<string | null>(null);

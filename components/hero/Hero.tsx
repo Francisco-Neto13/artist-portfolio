@@ -4,7 +4,7 @@ import { Pencil } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAdminStatus } from '@/components/providers/AdminStatusProvider';
 import { getLatestProfile, invalidateLatestProfileCache } from '@/lib/profile';
-import { ProfileData, DEFAULT_PROFILE } from './types';
+import { ProfileData, DEFAULT_PROFILE } from '@/lib/profileTypes';
 import HeroContent from './display/HeroContent';
 import EditPanel from './management/EditPanel';
 import InfoModal from './display/InfoModal';

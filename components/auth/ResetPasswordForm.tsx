@@ -1,13 +1,14 @@
-"use client"
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
 
 export default function ResetPasswordForm() {
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [verifying, setVerifying] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -19,10 +20,13 @@ export default function ResetPasswordForm() {
     let revealTimer: ReturnType<typeof setTimeout> | null = null;
 
     const checkSession = async () => {
-      const { data: { user }, error: sessionError } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: sessionError,
+      } = await supabase.auth.getUser();
 
       if (sessionError || !user) {
-        router.replace("/auth/login");
+        router.replace('/auth/login');
       } else {
         setVerifying(false);
         revealTimer = setTimeout(() => setAnimate(true), 50);
@@ -37,43 +41,43 @@ export default function ResetPasswordForm() {
     };
   }, [router]);
 
-  const reveal = (delay = "") =>
+  const reveal = (delay = '') =>
     `transition-all duration-700 ease-out ${delay} ${
-      animate ? "opacity-100 translate-y-0 blur-none" : "opacity-0 translate-y-6 blur-sm"
+      animate ? 'opacity-100 translate-y-0 blur-none' : 'opacity-0 translate-y-6 blur-sm'
     }`;
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError('Passwords do not match.');
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setError('Password must be at least 6 characters.');
       return;
     }
 
     setLoading(true);
-    
-    const { error: updateError } = await supabase.auth.updateUser({ 
-      password: password 
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: password,
     });
 
     if (updateError) {
-      setError("Link expired or invalid. Please request a new one.");
+      setError('Link expired or invalid. Please request a new one.');
       setLoading(false);
     } else {
       setSuccess(true);
       setLoading(false);
-      
+
       await supabase.auth.signOut();
-      router.refresh(); 
-      
+      router.refresh();
+
       setTimeout(() => {
-        router.push("/auth/login");
+        router.push('/auth/login');
       }, 3000);
     }
   };
@@ -110,13 +114,16 @@ export default function ResetPasswordForm() {
               <label className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500 block mb-2 ml-1">
                 New Password
               </label>
-              <input 
+              <input
                 type="password"
                 required
                 placeholder="Enter new password"
                 className="w-full bg-slate-950/60 border border-white/[0.06] p-3.5 rounded-xl text-white outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition-all placeholder:text-slate-700"
                 value={password}
-                onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError('');
+                }}
               />
             </div>
 
@@ -124,13 +131,16 @@ export default function ResetPasswordForm() {
               <label className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500 block mb-2 ml-1">
                 Confirm Password
               </label>
-              <input 
+              <input
                 type="password"
                 required
                 placeholder="Confirm new password"
                 className="w-full bg-slate-950/60 border border-white/[0.06] p-3.5 rounded-xl text-white outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition-all placeholder:text-slate-700"
                 value={confirmPassword}
-                onChange={(e) => { setConfirmPassword(e.target.value); setError(""); }}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  setError('');
+                }}
               />
             </div>
 
@@ -145,12 +155,12 @@ export default function ResetPasswordForm() {
               </div>
             )}
 
-            <button 
+            <button
               type="submit"
               disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black py-4 rounded-xl text-[11px] uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-600/20 active:scale-[0.98] flex items-center justify-center gap-3 cursor-pointer"
             >
-              {loading ? "Updating..." : "Update Password"}
+              {loading ? 'Updating...' : 'Update Password'}
             </button>
           </form>
         </>

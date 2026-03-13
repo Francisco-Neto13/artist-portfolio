@@ -1,6 +1,7 @@
 'use client';
+
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom'; 
+import { createPortal } from 'react-dom';
 import { Artwork } from '../types';
 import { getOptimizedUrl, formatDate } from '@/lib/imageUtils';
 
@@ -25,18 +26,18 @@ export default function ArtworkLightbox({ artwork, index, total, onClose, onNavi
   }, []);
 
   const content = (
-    <div 
+    <div
       className="fixed inset-0 z-[99999] bg-slate-950/98 backdrop-blur-2xl flex items-center justify-center p-4 md:p-8"
       style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}
       onClick={onClose}
     >
-      <div 
+      <div
         className="relative w-full max-w-5xl bg-slate-900 rounded-2xl border border-slate-700/50 shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="absolute top-0 left-0 w-full p-4 z-20 flex justify-end pointer-events-none">
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="pointer-events-auto flex items-center gap-2 px-3 py-2 bg-slate-950/80 hover:bg-red-500/20 border border-white/10 rounded-lg text-slate-300 hover:text-white transition-all cursor-pointer backdrop-blur-md"
           >
             <span className="text-[10px] uppercase tracking-widest font-bold">Close</span>
@@ -46,22 +47,28 @@ export default function ArtworkLightbox({ artwork, index, total, onClose, onNavi
 
         <div className="relative w-full h-[60vh] md:h-[70vh] bg-black/40 flex items-center justify-center overflow-hidden p-4 md:p-10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img 
-            src={getOptimizedUrl(artwork.image_url, 95, 1600)} 
+          <img
+            src={getOptimizedUrl(artwork.image_url, 95, 1600)}
             alt={artwork.title}
             className="max-w-full max-h-full object-contain shadow-2xl select-none"
           />
-          
+
           {total > 1 && (
             <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
-              <button 
-                onClick={(e) => { e.stopPropagation(); onNavigate('prev'); }} 
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNavigate('prev');
+                }}
                 className="pointer-events-auto w-12 h-12 rounded-full bg-slate-900/60 hover:bg-blue-600 text-white transition-all flex items-center justify-center cursor-pointer border border-white/10 shadow-xl group"
               >
                 <svg className="w-6 h-6 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path d="M15 19l-7-7 7-7" /></svg>
               </button>
-              <button 
-                onClick={(e) => { e.stopPropagation(); onNavigate('next'); }} 
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNavigate('next');
+                }}
                 className="pointer-events-auto w-12 h-12 rounded-full bg-slate-900/60 hover:bg-blue-600 text-white transition-all flex items-center justify-center cursor-pointer border border-white/10 shadow-xl group"
               >
                 <svg className="w-6 h-6 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path d="M9 5l7 7-7 7" /></svg>
@@ -80,12 +87,12 @@ export default function ArtworkLightbox({ artwork, index, total, onClose, onNavi
                 </span>
               </div>
               <p className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-bold">
-                <span className="text-blue-500/70">{artwork.type}</span> 
-                <span className="mx-2 text-slate-800">•</span> 
+                <span className="text-blue-500/70">{artwork.type}</span>
+                <span className="mx-2 text-slate-800">|</span>
                 {formatDate(artwork.created_at)}
               </p>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <div className="px-4 py-1.5 bg-slate-950 border border-slate-800 rounded-full text-[10px] font-mono text-slate-400 tracking-tighter">
                 {index + 1} <span className="text-slate-700 mx-1">/</span> {total}

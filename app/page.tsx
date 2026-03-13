@@ -4,7 +4,7 @@ import CommissionSection from '@/components/commissions/CommissionSection';
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-slate-950">
       <div className="animate-reveal">
         <Hero />
       </div>
@@ -14,6 +14,6 @@ export default function Home() {
       <section className="border-t border-blue-900/20">
         <CommissionSection />
       </section>
-    </main>
+    </div>
   );
 }

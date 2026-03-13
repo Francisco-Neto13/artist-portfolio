@@ -10,7 +10,7 @@ import {
   SOCIAL_MAX, 
   LOCATION_MAX, 
   TAG_LABEL_MAX 
-} from '../types';
+} from '@/lib/profileTypes';
 import EditAvatarSection from './EditAvatarSection';
 import EditProfileFields from './EditProfileFields';
 import EditSocialLinks from './EditSocialLinks';

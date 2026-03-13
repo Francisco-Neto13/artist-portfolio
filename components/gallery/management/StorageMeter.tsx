@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
@@ -50,7 +51,6 @@ export default function StorageMeter({ refreshTrigger }: { refreshTrigger?: unkn
 
   return (
     <div className="relative w-full border-b border-white/[0.03] bg-slate-950">
-
       <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-3">
           <div className={`w-1.5 h-1.5 rounded-full ${statusDot}`} />
@@ -68,7 +68,7 @@ export default function StorageMeter({ refreshTrigger }: { refreshTrigger?: unkn
           <span className={`text-[9px] font-bold tabular-nums tracking-wider ${
             isCritical ? 'text-red-500' : isWarning ? 'text-amber-500' : 'text-slate-600'
           }`}>
-            {percentage.toFixed(1)}% · {statusLabel}
+            {percentage.toFixed(1)}% | {statusLabel}
           </span>
         )}
       </div>

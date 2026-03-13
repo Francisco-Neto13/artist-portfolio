@@ -1,25 +1,9 @@
 import { supabase } from '@/lib/supabase';
+import type { ProfileData, SocialLinks, ProfileTag } from '@/lib/profileTypes';
 
-type SocialLinks = {
-  instagram: string;
-  twitter: string;
-  mail: string;
-};
-
-type ProfileTag = {
-  label: string;
-  status: string;
-};
-
-export type LatestProfile = {
+export type LatestProfile = ProfileData & {
   id: string;
-  full_name: string;
-  bio: string;
-  location: string;
   avatar_url: string;
-  social_links: SocialLinks;
-  languages: ProfileTag[];
-  hobbies: ProfileTag[];
   commission_status: 'open' | 'closed' | 'waitlist' | null;
 };
 

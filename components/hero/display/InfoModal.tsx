@@ -1,7 +1,7 @@
 'use client';
 
 import { X, Languages, Palette } from 'lucide-react';
-import { ProfileData } from '../types';
+import { ProfileData } from '@/lib/profileTypes';
 
 interface InfoModalProps {
   type: 'languages' | 'hobbies';

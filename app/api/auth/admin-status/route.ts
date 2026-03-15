@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
-import { isAdminUserId } from '@/lib/admin/server';
+import { getIsAdminUser } from '@/lib/admin/server';
 
 export async function GET() {
   const cookieStore = await cookies();
@@ -23,5 +23,7 @@ export async function GET() {
   );
 
   const { data: { user } } = await supabase.auth.getUser();
-  return NextResponse.json({ isAdmin: isAdminUserId(user?.id) });
+  const isAdmin = await getIsAdminUser(supabase, user?.id);
+
+  return NextResponse.json({ isAdmin });
 }

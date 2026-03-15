@@ -1,18 +1,23 @@
 import 'server-only';
 
-function parseAdminIds(raw?: string): string[] {
-  if (!raw) return [];
-  return raw
-    .split(',')
-    .map((id) => id.trim())
-    .filter(Boolean);
-}
+type AdminRpcClient = {
+  rpc: (fn: 'is_admin') => {
+    single: () => PromiseLike<{ data: boolean | null; error: { message?: string } | null }>;
+  };
+};
 
-function getConfiguredAdminIds(): string[] {
-  return parseAdminIds(process.env.ADMIN_USER_IDS);
-}
-
-export function isAdminUserId(userId?: string | null): boolean {
+export async function getIsAdminUser(
+  supabase: AdminRpcClient,
+  userId?: string | null
+): Promise<boolean> {
   if (!userId) return false;
-  return getConfiguredAdminIds().includes(userId);
+
+  const { data, error } = await supabase.rpc('is_admin').single();
+
+  if (error) {
+    console.error('Failed to resolve admin status:', error.message ?? error);
+    return false;
+  }
+
+  return data === true;
 }

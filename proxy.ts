@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { isAdminUserId } from '@/lib/admin/server';
+import { getIsAdminUser } from '@/lib/admin/server';
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
@@ -38,7 +38,7 @@ export async function proxy(request: NextRequest) {
   const isDashboardPage = request.nextUrl.pathname === '/dashboard'; 
   const isResetPage = request.nextUrl.pathname === '/auth/reset-password';
   const hasRecoveryCode = request.nextUrl.searchParams.has('code');
-  const isAdmin = isAdminUserId(user?.id);
+  const isAdmin = await getIsAdminUser(supabase, user?.id);
 
   if (user) {
     if (isLoginPage) {

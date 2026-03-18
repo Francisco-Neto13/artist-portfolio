@@ -16,7 +16,6 @@ export type ProfileTag = {
 };
 
 export interface ProfileData {
-  id?: string;
   full_name: string;
   bio: string;
   location: string;
@@ -24,6 +23,12 @@ export interface ProfileData {
   social_links: SocialLinks;
   languages: ProfileTag[];
   hobbies: ProfileTag[];
+}
+
+export type CommissionStatus = 'open' | 'closed' | 'waitlist';
+
+export interface SiteProfile extends ProfileData {
+  commission_status: CommissionStatus | null;
 }
 
 export const DEFAULT_PROFILE: ProfileData = {

@@ -1,13 +1,10 @@
 import { supabase } from '@/lib/supabase';
-import type { ProfileData, SocialLinks, ProfileTag } from '@/lib/profileTypes';
+import type { ProfileData, SiteProfile, SocialLinks, ProfileTag } from '@/lib/profileTypes';
 
-export type LatestProfile = ProfileData & {
-  id: string;
-  avatar_url: string;
-  commission_status: 'open' | 'closed' | 'waitlist' | null;
-};
+export const SITE_PROFILE_SLUG = 'main';
 
-type RawProfile = Partial<LatestProfile> & {
+type RawSiteProfile = Partial<SiteProfile> & {
+  slug?: string | null;
   social_links?: Partial<SocialLinks> | null;
   languages?: ProfileTag[] | null;
   hobbies?: ProfileTag[] | null;
@@ -15,15 +12,14 @@ type RawProfile = Partial<LatestProfile> & {
 
 const PROFILE_TTL_MS = 10_000;
 
-let cachedProfile: LatestProfile | null = null;
+let cachedProfile: SiteProfile | null = null;
 let cachedAt = 0;
-let inFlightProfileRequest: Promise<LatestProfile | null> | null = null;
+let inFlightProfileRequest: Promise<SiteProfile | null> | null = null;
 
-function normalizeProfile(raw: RawProfile | null): LatestProfile | null {
-  if (!raw?.id) return null;
+function normalizeSiteProfile(raw: RawSiteProfile | null): SiteProfile | null {
+  if (!raw) return null;
 
   return {
-    id: raw.id,
     full_name: raw.full_name ?? '',
     bio: raw.bio ?? '',
     location: raw.location ?? '',
@@ -39,13 +35,28 @@ function normalizeProfile(raw: RawProfile | null): LatestProfile | null {
   };
 }
 
-export function invalidateLatestProfileCache() {
+function toSiteProfilePayload(profile: ProfileData, commissionStatus?: SiteProfile['commission_status']) {
+  return {
+    slug: SITE_PROFILE_SLUG,
+    full_name: profile.full_name,
+    bio: profile.bio,
+    location: profile.location,
+    avatar_url: profile.avatar_url ?? '',
+    social_links: profile.social_links,
+    languages: profile.languages,
+    hobbies: profile.hobbies,
+    ...(commissionStatus !== undefined ? { commission_status: commissionStatus } : {}),
+    updated_at: new Date().toISOString(),
+  };
+}
+
+export function invalidateSiteProfileCache() {
   cachedProfile = null;
   cachedAt = 0;
   inFlightProfileRequest = null;
 }
 
-export async function getLatestProfile(options?: { forceRefresh?: boolean }): Promise<LatestProfile | null> {
+export async function getSiteProfile(options?: { forceRefresh?: boolean }): Promise<SiteProfile | null> {
   const forceRefresh = options?.forceRefresh ?? false;
   const now = Date.now();
 
@@ -58,14 +69,17 @@ export async function getLatestProfile(options?: { forceRefresh?: boolean }): Pr
   }
 
   inFlightProfileRequest = (async () => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('updated_at', { ascending: false, nullsFirst: false })
-      .limit(1)
+    const { data, error } = await supabase
+      .from('site_profile')
+      .select('full_name, bio, location, avatar_url, social_links, languages, hobbies, commission_status')
+      .eq('slug', SITE_PROFILE_SLUG)
       .maybeSingle();
 
-    const normalized = normalizeProfile((data as RawProfile | null) ?? null);
+    if (error) {
+      throw error;
+    }
+
+    const normalized = normalizeSiteProfile((data as RawSiteProfile | null) ?? null);
     cachedProfile = normalized;
     cachedAt = Date.now();
     return normalized;
@@ -76,4 +90,38 @@ export async function getLatestProfile(options?: { forceRefresh?: boolean }): Pr
   } finally {
     inFlightProfileRequest = null;
   }
+}
+
+export async function saveSiteProfile(profile: ProfileData, commissionStatus?: SiteProfile['commission_status']) {
+  const payload = toSiteProfilePayload(profile, commissionStatus);
+  const { error } = await supabase.from('site_profile').upsert(payload, {
+    onConflict: 'slug',
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  invalidateSiteProfileCache();
+
+  return normalizeSiteProfile({
+    ...payload,
+    commission_status: commissionStatus ?? null,
+  });
+}
+
+export async function updateSiteCommissionStatus(commissionStatus: NonNullable<SiteProfile['commission_status']>) {
+  const { error } = await supabase
+    .from('site_profile')
+    .update({
+      commission_status: commissionStatus,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('slug', SITE_PROFILE_SLUG);
+
+  if (error) {
+    throw error;
+  }
+
+  invalidateSiteProfileCache();
 }

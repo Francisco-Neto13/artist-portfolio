@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAdminStatus } from '@/components/providers/AdminStatusProvider';
-import { getLatestProfile, invalidateLatestProfileCache } from '@/lib/profile';
+import { getSiteProfile, updateSiteCommissionStatus } from '@/lib/profile';
 import { Commission, CommissionStatus } from './types';
 import EditCommissionModal from './management/EditCommissionModal';
 import CommissionHeader from './management/CommissionHeader';
@@ -13,7 +13,6 @@ import CommissionDeleteModal from './display/CommissionDeleteModal';
 export default function CommissionSection() {
   const { isAdmin } = useAdminStatus();
   const [commissions, setCommissions] = useState<Commission[]>([]);
-  const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [socialLinks, setSocialLinks] = useState<{instagram: string, twitter: string, mail: string} | null>(null);
   const [status, setStatus] = useState<CommissionStatus>('open');
   const [editingCommission, setEditingCommission] = useState<Commission | null>(null);
@@ -29,13 +28,12 @@ export default function CommissionSection() {
   const fetchData = async () => {
     const [{ data: tiers }, profile] = await Promise.all([
       supabase.from('commission_tiers').select('*').order('order_index', { ascending: true }),
-      getLatestProfile(),
+      getSiteProfile(),
     ]);
 
     if (tiers) setCommissions(tiers);
 
     if (profile) {
-      setActiveProfileId(profile.id);
       if (profile.commission_status) setStatus(profile.commission_status);
       if (profile.social_links) setSocialLinks(profile.social_links);
     }
@@ -73,11 +71,9 @@ export default function CommissionSection() {
   };
 
   const toggleStatus = async () => {
-    if (!activeProfileId) return;
     const cycle: Record<CommissionStatus, CommissionStatus> = { open: 'closed', closed: 'waitlist', waitlist: 'open' };
     const newStatus = cycle[status];
-    await supabase.from('profiles').update({ commission_status: newStatus }).eq('id', activeProfileId);
-    invalidateLatestProfileCache();
+    await updateSiteCommissionStatus(newStatus);
     setStatus(newStatus);
   };
 

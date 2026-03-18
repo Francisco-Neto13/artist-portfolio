@@ -31,17 +31,17 @@ export default async function Icon() {
   );
 
   const { data } = await supabase
-    .from('profiles')
+    .from('site_profile')
     .select('avatar_url')
-    .order('updated_at', { ascending: false, nullsFirst: false })
-    .limit(1)
+    .eq('slug', 'main')
     .maybeSingle();
 
   let imageData: string | null = null;
+  const avatarUrl = data?.avatar_url ?? null;
 
-  if (isSafeAvatarUrl(data?.avatar_url)) {
+  if (isSafeAvatarUrl(avatarUrl)) {
     try {
-      const res = await fetch(data.avatar_url, { cache: 'force-cache' });
+      const res = await fetch(avatarUrl, { cache: 'force-cache' });
       const buffer = await res.arrayBuffer();
       const pngBuffer = await sharp(Buffer.from(buffer))
         .resize(128, 128)

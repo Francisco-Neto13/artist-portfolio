@@ -1,9 +1,8 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { Pencil } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { useAdminStatus } from '@/components/providers/AdminStatusProvider';
-import { getLatestProfile, invalidateLatestProfileCache } from '@/lib/profile';
+import { getSiteProfile, saveSiteProfile } from '@/lib/profile';
 import { ProfileData, DEFAULT_PROFILE } from '@/lib/profileTypes';
 import HeroContent from './display/HeroContent';
 import EditPanel from './management/EditPanel';
@@ -21,7 +20,7 @@ export default function Hero() {
 
   useEffect(() => {
     const load = async () => {
-      const data = await getLatestProfile();
+      const data = await getSiteProfile();
       if (data) {
         const nextProfile: ProfileData = {
           ...DEFAULT_PROFILE,
@@ -59,15 +58,8 @@ export default function Hero() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) return;
-      const targetProfileId = profile.id ?? draft.id ?? session.user.id;
-      const { error } = await supabase.from('profiles').upsert({
-        id: targetProfileId, ...draft, updated_at: new Date().toISOString(),
-      });
-      if (error) throw error;
-      invalidateLatestProfileCache();
-      setProfile({ ...draft, id: targetProfileId });
+      await saveSiteProfile(draft);
+      setProfile({ ...draft });
       setIsEditing(false);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAdminStatus } from '@/components/providers/AdminStatusProvider';
-import { getLatestProfile } from '@/lib/profile';
+import { getSiteProfile } from '@/lib/profile';
 import { Menu, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -15,7 +15,7 @@ export default function Navbar() {
 
   useEffect(() => {
     const loadProfileName = async () => {
-      const profile = await getLatestProfile();
+      const profile = await getSiteProfile();
       if (profile?.full_name) setProfileName(profile.full_name.toUpperCase());
     };
 

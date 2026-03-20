@@ -51,6 +51,23 @@ The platform features an integrated, secure administrative area for comprehensiv
 * **Commission System:** Management of pricing tiers, service descriptions, and visual references.
 * **Asset Optimization:** Automated oversight of image dimensions and asset compression.
 
+## Project Structure
+
+```text
+.
+|-- public/
+|-- src/
+|   |-- app/
+|   |-- components/
+|   |-- lib/
+|   `-- proxy.ts
+|-- supabase/
+|-- next.config.ts
+`-- tsconfig.json
+```
+
+Application code now lives inside `src/`, while static assets, infrastructure files, and project configuration stay at the repository root.
+
 ---
 
 <div align="center">

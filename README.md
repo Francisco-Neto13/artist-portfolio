@@ -68,6 +68,20 @@ The platform features an integrated, secure administrative area for comprehensiv
 
 Application code now lives inside `src/`, while static assets, infrastructure files, and project configuration stay at the repository root.
 
+## Environment
+
+Create a `.env.local` file based on `.env.example` and configure:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=""
+NEXT_PUBLIC_SUPABASE_ANON_KEY=""
+CRON_SECRET=""
+```
+
+## Deploy Notes
+
+In production, set `CRON_SECRET` in Vercel so the `/api/keep-alive` route stays private and can be called by the configured Vercel cron job.
+
 ---
 
 <div align="center">

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { X, Check, Camera, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Commission, DESCRIPTION_MAX, COMM_TITLE_MAX, COMM_PRICE_MAX } from '../types';
-import { convertToWebP, getOptimizedUrl } from '@/lib/imageUtils'; 
+import { convertToWebP, getOptimizedUrl, getOriginalImageUrl } from '@/lib/imageUtils'; 
 
 interface EditCommissionModalProps {
   commission: Commission | null;
@@ -109,13 +109,7 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
               <label className="cursor-pointer block">
                 <div className="aspect-[16/9] md:aspect-[4/3] w-full rounded-xl overflow-hidden bg-slate-950 border border-white/[0.06] relative flex items-center justify-center">
                   {draft.image_url ? (
-                    <Image 
-                      src={getOptimizedUrl(draft.image_url, 82, 800)} 
-                      alt="Preview" 
-                      fill 
-                      className="object-cover" 
-                      sizes="(max-width: 768px) 100vw, 800px"
-                    />
+                    <PreviewImage key={draft.image_url} imageUrl={draft.image_url} />
                   ) : (
                     <ImageIcon size={36} className="text-slate-800" />
                   )}
@@ -219,4 +213,24 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
   );
 
   return createPortal(modal, document.body);
+}
+
+function PreviewImage({ imageUrl }: { imageUrl: string }) {
+  const [imageSrc, setImageSrc] = useState(() => getOptimizedUrl(imageUrl, 82, 800));
+
+  return (
+    <Image 
+      src={imageSrc}
+      alt="Preview" 
+      fill 
+      onError={() => {
+        const fallbackSrc = getOriginalImageUrl(imageUrl);
+        if (imageSrc !== fallbackSrc) {
+          setImageSrc(fallbackSrc);
+        }
+      }}
+      className="object-cover" 
+      sizes="(max-width: 768px) 100vw, 800px"
+    />
+  );
 }

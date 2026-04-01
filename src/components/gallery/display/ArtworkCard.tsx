@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Artwork } from '../types';
-import { getOptimizedUrl } from '@/lib/imageUtils';
+import { getOptimizedUrl, getOriginalImageUrl } from '@/lib/imageUtils';
 
 const extractStoragePath = (url: string): string | null => {
   const marker = '/gallery/';
@@ -17,6 +17,29 @@ interface ArtworkCardProps {
   isAdmin?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
+}
+
+function ArtworkCardImage({ imageUrl, title }: { imageUrl: string; title: string }) {
+  const [imageSrc, setImageSrc] = useState(() => getOptimizedUrl(imageUrl, 85, 800));
+
+  return (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={imageSrc}
+        alt={title}
+        loading="lazy"
+        decoding="async"
+        onError={() => {
+          const fallbackSrc = getOriginalImageUrl(imageUrl);
+          if (imageSrc !== fallbackSrc) {
+            setImageSrc(fallbackSrc);
+          }
+        }}
+        className="block w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+      />
+    </>
+  );
 }
 
 export default function ArtworkCard({ art, onClick, isAdmin, onEdit, onDelete }: ArtworkCardProps) {
@@ -67,14 +90,7 @@ export default function ArtworkCard({ art, onClick, isAdmin, onEdit, onDelete }:
         )}
 
         <div className="relative overflow-hidden rounded-lg md:rounded-2xl bg-slate-900 transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(59,130,246,0.15)]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={getOptimizedUrl(art.image_url, 85, 800)}
-            alt={art.title}
-            loading="lazy"
-            decoding="async"
-            className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
-          />
+          <ArtworkCardImage key={art.image_url} imageUrl={art.image_url} title={art.title} />
         </div>
 
         <div className="mt-2 md:mt-3 px-1">

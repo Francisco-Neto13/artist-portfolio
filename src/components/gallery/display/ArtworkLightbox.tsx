@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Artwork } from '../types';
-import { getOptimizedUrl, formatDate } from '@/lib/imageUtils';
+import { getOptimizedUrl, getOriginalImageUrl, formatDate } from '@/lib/imageUtils';
 
 interface LightboxProps {
   artwork: Artwork;
@@ -11,6 +11,27 @@ interface LightboxProps {
   total: number;
   onClose: () => void;
   onNavigate: (dir: 'prev' | 'next') => void;
+}
+
+function ArtworkLightboxImage({ imageUrl, title }: { imageUrl: string; title: string }) {
+  const [imageSrc, setImageSrc] = useState(() => getOptimizedUrl(imageUrl, 95, 1600));
+
+  return (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={imageSrc}
+        alt={title}
+        onError={() => {
+          const fallbackSrc = getOriginalImageUrl(imageUrl);
+          if (imageSrc !== fallbackSrc) {
+            setImageSrc(fallbackSrc);
+          }
+        }}
+        className="block max-w-full max-h-full object-contain shadow-2xl select-none"
+      />
+    </>
+  );
 }
 
 export default function ArtworkLightbox({ artwork, index, total, onClose, onNavigate }: LightboxProps) {
@@ -46,12 +67,7 @@ export default function ArtworkLightbox({ artwork, index, total, onClose, onNavi
         </div>
 
         <div className="relative w-full h-[60vh] md:h-[70vh] bg-black/40 flex items-center justify-center overflow-hidden p-4 md:p-10">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={getOptimizedUrl(artwork.image_url, 95, 1600)}
-            alt={artwork.title}
-            className="max-w-full max-h-full object-contain shadow-2xl select-none"
-          />
+          <ArtworkLightboxImage key={artwork.image_url} imageUrl={artwork.image_url} title={artwork.title} />
 
           {total > 1 && (
             <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">

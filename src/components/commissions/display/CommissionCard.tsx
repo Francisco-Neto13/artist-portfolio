@@ -1,8 +1,9 @@
 'use client';
+import { useState } from 'react';
 import Image from 'next/image';
 import { Pencil, Trash2, Image as ImageIcon } from 'lucide-react';
 import { Commission } from '../types';
-import { getOptimizedUrl } from '@/lib/imageUtils'; 
+import { getOptimizedUrl, getOriginalImageUrl } from '@/lib/imageUtils'; 
 
 interface CommissionCardProps {
   commission: Commission;
@@ -11,7 +12,28 @@ interface CommissionCardProps {
   onDelete: () => void;
 }
 
+function CommissionCardImage({ imageUrl, title }: { imageUrl: string; title: string }) {
+  const [imageSrc, setImageSrc] = useState(() => getOptimizedUrl(imageUrl, 85, 800));
+
+  return (
+    <Image 
+      src={imageSrc}
+      alt={title} 
+      fill 
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      onError={() => {
+        const fallbackSrc = getOriginalImageUrl(imageUrl);
+        if (imageSrc !== fallbackSrc) {
+          setImageSrc(fallbackSrc);
+        }
+      }}
+      className="object-cover group-hover:scale-105 transition-transform duration-700" 
+    />
+  );
+}
+
 export default function CommissionCard({ commission, isAdmin, onEdit, onDelete }: CommissionCardProps) {
+
   return (
     <div className="group relative flex flex-col bg-gradient-to-b from-slate-900/60 to-slate-900/40 border border-white/[0.06] rounded-3xl overflow-hidden hover:border-blue-500/30 transition-all duration-500 shadow-2xl h-full w-full max-w-[450px] mx-auto">
       
@@ -34,13 +56,7 @@ export default function CommissionCard({ commission, isAdmin, onEdit, onDelete }
 
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-950 shrink-0">
         {commission.image_url ? (
-          <Image 
-            src={getOptimizedUrl(commission.image_url, 85, 800)} 
-            alt={commission.title} 
-            fill 
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-700" 
-          />
+          <CommissionCardImage key={commission.image_url} imageUrl={commission.image_url} title={commission.title} />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-slate-900">
             <ImageIcon size={40} className="text-slate-800" />

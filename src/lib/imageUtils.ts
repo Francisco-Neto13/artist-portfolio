@@ -112,7 +112,29 @@ async function convertOnMainThread(file: File, maxDim: number): Promise<Conversi
 
 export const getOptimizedUrl = (url: string, quality = 82, width = 800) => {
   if (!url || !url.includes('supabase.co')) return url;
-  return `${url}?width=${width}&quality=${quality}&format=webp`;
+  try {
+    const optimizedUrl = new URL(url);
+    optimizedUrl.searchParams.set('width', String(width));
+    optimizedUrl.searchParams.set('quality', String(quality));
+    optimizedUrl.searchParams.set('format', 'webp');
+    return optimizedUrl.toString();
+  } catch {
+    return url;
+  }
+};
+
+export const getOriginalImageUrl = (url: string) => {
+  if (!url) return url;
+
+  try {
+    const originalUrl = new URL(url);
+    originalUrl.searchParams.delete('width');
+    originalUrl.searchParams.delete('quality');
+    originalUrl.searchParams.delete('format');
+    return originalUrl.toString();
+  } catch {
+    return url;
+  }
 };
 
 export const formatDate = (dateString?: string) => {

@@ -1,7 +1,7 @@
-# Atmisuki | Digital Art Showcase
+﻿# Atmisuki | Digital Art Showcase
 
 <div align="center">
-  <p>A high-performance digital ecosystem for artwork exhibition, commission management, and brand identity.</p>
+  <p>A high-performance digital ecosystem for artwork exhibition, commission presentation, and brand identity.</p>
   <a href="https://atmisuki-portfolio.vercel.app/"><strong>Live Demonstration</strong></a>
 </div>
 
@@ -51,36 +51,13 @@ The platform features an integrated, secure administrative area for comprehensiv
 * **Commission System:** Management of pricing tiers, service descriptions, and visual references.
 * **Asset Optimization:** Automated oversight of image dimensions and asset compression.
 
-## Project Structure
+## License
 
-```text
-.
-|-- public/
-|-- src/
-|   |-- app/
-|   |-- components/
-|   |-- lib/
-|   `-- proxy.ts
-|-- supabase/
-|-- next.config.ts
-`-- tsconfig.json
-```
+This project is proprietary and protected by copyright.
 
-Application code now lives inside `src/`, while static assets, infrastructure files, and project configuration stay at the repository root.
+© 2026 Atmisuki. All rights reserved.
 
-## Environment
-
-Create a `.env.local` file based on `.env.example` and configure:
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=""
-NEXT_PUBLIC_SUPABASE_ANON_KEY=""
-CRON_SECRET=""
-```
-
-## Deploy Notes
-
-In production, set `CRON_SECRET` in Vercel so the `/api/keep-alive` route stays private and can be called by the configured Vercel cron job.
+See the `LICENSE` file for the full terms of use and restrictions.
 
 ---
 

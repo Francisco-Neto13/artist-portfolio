@@ -1,4 +1,4 @@
-import { Github, Instagram } from 'lucide-react';
+import { Instagram, Twitter } from 'lucide-react';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -25,16 +25,16 @@ export default function Footer() {
 
           <div className="flex items-center gap-6 order-3">
             <a
-              href="https://github.com/Francisco-Neto13"
+              href="https://x.com/atmisuki"
               target="_blank"
               rel="noopener noreferrer"
               className="text-slate-400 hover:text-blue-500 transition-all duration-300 hover:scale-110"
             >
-              <Github size={18} />
+              <Twitter size={18} />
             </a>
 
             <a
-              href="https://www.instagram.com/cisscoo_"
+              href="https://www.instagram.com/atmisuki/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-slate-400 hover:text-blue-500 transition-all duration-300 hover:scale-110"
@@ -43,7 +43,7 @@ export default function Footer() {
             </a>
 
             <a
-              href="https://discord.com/users/iyasuo_"
+              href="https://discord.com/users/728516546854387762"
               target="_blank"
               rel="noopener noreferrer"
               className="text-slate-400 hover:text-[#5865F2] transition-all duration-300 hover:scale-110"

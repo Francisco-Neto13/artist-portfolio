@@ -1,4 +1,5 @@
-import { Instagram, Twitter, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
+import { InstagramIcon, XIcon } from '@/components/shared/BrandIcons';
 
 interface Props {
   links: { instagram: string; twitter: string; mail: string };
@@ -25,8 +26,8 @@ export default function EditSocialLinks({ links, onChange, socialMax }: Props) {
 
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
-                {s === 'instagram' && <Instagram size={13} />}
-                {s === 'twitter' && <Twitter size={13} />}
+                {s === 'instagram' && <InstagramIcon size={13} />}
+                {s === 'twitter' && <XIcon size={13} />}
                 {s === 'mail' && <Mail size={14} />}
               </div>
               <input

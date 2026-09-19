@@ -1,7 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { Instagram, Twitter, Mail, MapPin, Languages, Palette } from 'lucide-react';
+import { Mail, MapPin, Languages, Palette } from 'lucide-react';
+import { InstagramIcon, XIcon } from '@/components/shared/BrandIcons';
 import { ProfileData } from '@/lib/profileTypes';
 import { safeMailto, safeSocialUrl } from '@/lib/safeLinks';
 
@@ -45,8 +46,8 @@ export default function HeroContent({ profile, displayText, onOpenModal }: HeroC
                 rel={s === 'mail' ? undefined : 'noopener noreferrer'}
                 className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-blue-600/8 border border-blue-500/15 hover:border-blue-500/50 hover:bg-blue-600/20 flex items-center justify-center text-blue-400/70 hover:text-blue-400 transition-all"
               >
-                {s === 'instagram' && <Instagram size={15} />}
-                {s === 'twitter' && <Twitter size={15} />}
+                {s === 'instagram' && <InstagramIcon size={15} />}
+                {s === 'twitter' && <XIcon size={15} />}
                 {s === 'mail' && <Mail size={15} />}
               </a>
             );
@@ -62,7 +63,16 @@ export default function HeroContent({ profile, displayText, onOpenModal }: HeroC
 
         <h1 className="text-3xl md:text-7xl font-bold tracking-tighter flex flex-wrap justify-center gap-x-3 md:gap-x-4 leading-none">
           <span className="text-white">Hi, I&apos;m</span>
-          <span className="text-blue-500 inline-flex items-center">
+          {/*
+            O nome completo sai no HTML, sempre. O `displayText` comeca vazio
+            por causa da animacao de digitacao, entao o h1 servido era so
+            "Hi, I'm" — sem o nome, para o buscador e para quem usa leitor de
+            tela, que antes ouvia um nome pela metade ou nada.
+            O par sr-only + aria-hidden resolve os dois: o leitor le o nome uma
+            vez, quem enxerga ve a animacao.
+          */}
+          <span className="sr-only">{profile.full_name}</span>
+          <span className="text-blue-500 inline-flex items-center" aria-hidden="true">
             {displayText}
             {displayText.length < (profile.full_name?.length || 0) && (
               <span className="ml-1 border-r-4 border-blue-500 h-8 md:h-12 animate-pulse" />

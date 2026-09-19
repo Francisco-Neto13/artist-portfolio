@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from '@/components/shared/Navbar';
 import Footer from '@/components/shared/Footer'; 
 import { AdminStatusProvider } from '@/components/providers/AdminStatusProvider';
+import { ToastProvider } from '@/components/providers/ToastProvider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,13 +31,15 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 text-white flex flex-col min-h-screen`}>
-        <AdminStatusProvider>
-          <Navbar />
-          <main className="flex-grow">
-            {children}
-          </main>
-          <Footer />
-        </AdminStatusProvider>
+        <ToastProvider>
+          <AdminStatusProvider>
+            <Navbar />
+            <main className="flex-grow">
+              {children}
+            </main>
+            <Footer />
+          </AdminStatusProvider>
+        </ToastProvider>
       </body>
     </html>
   );

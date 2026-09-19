@@ -1,0 +1,47 @@
+# Atualizacao de dependencias.
+#
+# Semanal e AGRUPADO: um PR por grupo, nao um por pacote. Sem o agrupamento o
+# Dependabot abre dezenas de PRs por semana, ninguem revisa, e o efeito pratico
+# e que as atualizacoes param de acontecer — que e exatamente o que aconteceu
+# com este projeto: cinco meses parado, 19 vulnerabilidades acumuladas, duas
+# criticas (Next 16.1.6 com request smuggling, sharp com os CVEs do libvips).
+#
+# ⚠️ Isto NAO atrasa correcao de seguranca: alerta de vulnerabilidade dispara
+# fora deste calendario, na hora da divulgacao.
+version: 2
+
+updates:
+  # As proprias actions da CI. E este bloco que mantem os SHAs presos no ci.yml
+  # atualizados — sem ele, prender no SHA congelaria a action para sempre,
+  # inclusive nas correcoes de seguranca dela.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      # Separados porque a decisao humana e diferente: patch/minor da para
+      # revisar em lote e mesclar; major pede leitura do changelog. O lucide-react
+      # 0.x → 1.x deste repositorio e o exemplo: removeu TODOS os icones de
+      # marca, e quebrou quatro arquivos de uma vez.
+      producao:
+        dependency-type: "production"
+        update-types: ["minor", "patch"]
+      desenvolvimento:
+        dependency-type: "development"
+        update-types: ["minor", "patch"]

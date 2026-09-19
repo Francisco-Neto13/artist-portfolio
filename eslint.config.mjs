@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Saida do build da CI local (ver distDir no next.config.ts). Sem esta
+    // linha o eslint lintava o bundle gerado: 7084 problemas de codigo que
+    // ninguem escreveu.
+    ".next-ci/**",
   ]),
 ]);
 

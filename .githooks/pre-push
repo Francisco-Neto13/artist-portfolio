@@ -1,0 +1,70 @@
+#!/bin/sh
+#
+# Guarda local antes do push.
+#
+# Este repositorio nao tem o fluxo develop → main do chb_gaussfleet: e um site
+# so, e a `main` e o que a Vercel publica. Ou seja: push na main E deploy. Por
+# isso o hook roda a CI completa antes de deixar a main sair daqui.
+#
+# O que ele garante em quem o instalou (`npm run hooks`):
+#   1. `main` nao e apagada nem reescrita (force-push).
+#   2. Push para `main` roda `npm run ci` e recusa se falhar.
+#   3. Branch de trabalho sobe livre — a CI remota confere assim mesmo.
+#
+# `git push --no-verify` pula tudo. A CI do GitHub continua rodando.
+#
+# ⚠️ Diferente do chb_gaussfleet, a CI roda na SUA arvore de trabalho, nao num
+# checkout limpo do commit. E uma troca consciente: aqui todo push e para a
+# main, e um `npm ci` em worktree separado a cada push custaria minutos. Se a
+# arvore estiver suja, o hook avisa que conferiu outra coisa que nao o commit.
+
+eh_zero() {
+  case "$1" in
+    *[!0]*) return 1 ;;
+    *) return 0 ;;
+  esac
+}
+
+recusar() {
+  echo "[pre-push] recusado: $1"
+  shift
+  for linha in "$@"; do echo "           $linha"; done
+  exit 1
+}
+
+empurra_main=0
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$remote_ref" = "refs/heads/main" ] || continue
+
+  if eh_zero "$local_sha"; then
+    recusar "apagar a 'main' derruba o site publicado."
+  fi
+
+  # Remota ja existe e o que sobe nao descende dela = force-push (reescrita).
+  if ! eh_zero "$remote_sha"; then
+    if ! git cat-file -e "$remote_sha" 2>/dev/null || ! git merge-base --is-ancestor "$remote_sha" "$local_sha"; then
+      recusar "o push reescreveria a 'main' no GitHub (force-push)." \
+        "Rode 'git fetch' e integre as mudancas em vez de sobrescrever."
+    fi
+  fi
+
+  empurra_main=1
+done
+
+[ "$empurra_main" -eq 1 ] || exit 0
+
+if [ -n "$(git status --porcelain)" ]; then
+  echo "[pre-push] aviso: arvore suja. A CI abaixo confere o que esta em disco,"
+  echo "           nao exatamente o commit que vai subir."
+fi
+
+echo "[pre-push] push para a main: rodando a CI local"
+
+if ! npm run ci; then
+  echo ""
+  echo "[pre-push] push cancelado: a CI falhou, e a main publica direto na Vercel."
+  exit 1
+fi
+
+echo "[pre-push] CI verde. Seguindo com o push."

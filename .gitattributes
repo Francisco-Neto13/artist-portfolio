@@ -1,0 +1,5 @@
+* text=auto
+
+# Hooks nao tem extensao; com CRLF o sh do Git morre com "not found".
+.githooks/* text eol=lf
+*.sh text eol=lf

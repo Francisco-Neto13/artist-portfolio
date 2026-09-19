@@ -1,5 +1,7 @@
 'use client';
 
+import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Languages, Palette } from 'lucide-react';
 import { ProfileData } from '@/lib/profileTypes';
 
@@ -11,9 +13,33 @@ interface InfoModalProps {
 
 export default function InfoModal({ type, profile, onClose }: InfoModalProps) {
   const items = profile[type] || [];
+  const [mounted, setMounted] = useState(false);
 
-  return (
-    <div className="fixed inset-0 z-[600] flex items-center justify-center p-6">
+  useEffect(() => {
+    const timer = window.setTimeout(() => setMounted(true), 0);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      clearTimeout(timer);
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  const aoTeclar = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', aoTeclar);
+    return () => window.removeEventListener('keydown', aoTeclar);
+  }, [aoTeclar]);
+
+  const content = (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={type}
+      className="fixed inset-0 z-[600] flex items-center justify-center p-6"
+    >
       <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md" onClick={onClose} />
       <div
         className="relative bg-slate-900/90 border border-white/[0.06] w-full max-w-sm rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden"
@@ -48,4 +74,20 @@ export default function InfoModal({ type, profile, onClose }: InfoModalProps) {
       </div>
     </div>
   );
+
+  if (!mounted) return null;
+
+  /**
+   * Portal para o <body>, nao no lugar onde o componente aparece na arvore.
+   *
+   * `fixed` sozinho nao bastava: o Hero e envolvido por `.animate-reveal`, cuja
+   * animacao tem `forwards` e termina com `transform: matrix(1,0,0,1,0,0)` e
+   * `filter: blur(0px)`. Os dois sao visualmente nulos, mas qualquer transform
+   * ou filter diferente de `none` faz o elemento virar o BLOCO DE CONTENCAO dos
+   * descendentes `fixed` — e o painel passava a se posicionar em relacao ao
+   * Hero, nao a viewport. Media: ao rolar 900px, ele subia os 900px junto.
+   *
+   * O ArtworkLightbox ja fazia assim, por isso nunca sofreu do mesmo.
+   */
+  return createPortal(content, document.body);
 }

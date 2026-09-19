@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { X, Check, Loader2 } from 'lucide-react';
@@ -28,6 +28,23 @@ export default function AvatarCropModal({ imageSrc, onConfirm, onCancel }: Avata
     const { width, height } = e.currentTarget;
     setCrop(centerAspectCrop(width, height));
   };
+
+  /**
+   * Guarda a ref e, se a imagem JA estiver pronta, inicializa o recorte aqui.
+   *
+   * Mesma corrida do ArtworkCard: a imagem pode terminar de carregar antes de o
+   * React anexar o `onLoad`, e ai o evento nao dispara. Aqui a src e uma data:
+   * URL do FileReader, que decodifica rapido — o suficiente para, de vez em
+   * quando, o admin abrir o crop sem area de selecao nenhuma e ter de arrastar
+   * na mao. Usa as medidas naturais porque o layout pode nao ter acontecido
+   * ainda; com `unit: '%'` o resultado e o mesmo.
+   */
+  const guardarImg = useCallback((el: HTMLImageElement | null) => {
+    imgRef.current = el;
+    if (el?.complete && el.naturalWidth > 0) {
+      setCrop(centerAspectCrop(el.naturalWidth, el.naturalHeight));
+    }
+  }, []);
 
   const handleConfirm = async () => {
     if (!completedCrop || !imgRef.current) return;
@@ -100,9 +117,11 @@ export default function AvatarCropModal({ imageSrc, onConfirm, onCancel }: Avata
             aspect={1}
             circularCrop
           >
+            {/* O react-image-crop mede este elemento direto; um wrapper do next/image */}
+            {/* quebraria o calculo do recorte. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              ref={imgRef}
+              ref={guardarImg}
               src={imageSrc}
               alt="Crop preview"
               onLoad={onImageLoad}

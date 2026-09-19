@@ -22,6 +22,16 @@
   }
 }
 
+/*
+ * ⚠️ `forwards` mantem o ultimo keyframe aplicado, entao este elemento fica
+ * para sempre com `transform` e `filter` diferentes de `none` — mesmo sendo a
+ * matriz identidade e `blur(0px)`. Isso o torna o BLOCO DE CONTENCAO de
+ * qualquer descendente `position: fixed`, que passa a se posicionar em relacao
+ * a ele em vez da viewport.
+ *
+ * Quem precisar de overlay fixo aqui dentro tem de sair pela raiz, com
+ * createPortal(content, document.body). Ver InfoModal e ArtworkLightbox.
+ */
 .animate-reveal {
   animation: revealUp 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }

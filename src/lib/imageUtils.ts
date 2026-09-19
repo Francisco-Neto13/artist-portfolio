@@ -11,8 +11,7 @@ self.onmessage = async (event) => {
     bitmap = await createImageBitmap(file);
     let width = bitmap.width;
     let height = bitmap.height;
-    const wasResized = width > maxDim || height > maxDim;
-    if (wasResized) {
+    if (width > maxDim || height > maxDim) {
       const ratio = Math.min(maxDim / width, maxDim / height);
       width = Math.round(width * ratio);
       height = Math.round(height * ratio);
@@ -25,7 +24,7 @@ self.onmessage = async (event) => {
     ctx.clearRect(0, 0, width, height);
     ctx.drawImage(bitmap, 0, 0, width, height);
     const blob = await canvas.convertToBlob({ type: 'image/webp', quality: quality });
-    self.postMessage({ id, status: 'success', blob, wasResized });
+    self.postMessage({ id, status: 'success', blob, width, height });
   } catch (err) {
     self.postMessage({ id, status: 'error', message: err?.message ?? 'Unknown error.' });
   } finally {
@@ -52,7 +51,7 @@ function getWorker(): Worker {
     if (!job) return;
     pendingJobs.delete(data.id);
     if (data.status === 'success') {
-      job.resolve({ blob: data.blob, wasResized: data.wasResized });
+      job.resolve({ blob: data.blob, width: data.width, height: data.height });
     } else {
       job.reject(new Error(data.message));
     }
@@ -80,8 +79,7 @@ async function convertOnMainThread(file: File, maxDim: number): Promise<Conversi
     bitmap = await createImageBitmap(file);
     let width = bitmap.width;
     let height = bitmap.height;
-    const wasResized = width > maxDim || height > maxDim;
-    if (wasResized) {
+    if (width > maxDim || height > maxDim) {
       const ratio = Math.min(maxDim / width, maxDim / height);
       width = Math.round(width * ratio);
       height = Math.round(height * ratio);
@@ -104,34 +102,74 @@ async function convertOnMainThread(file: File, maxDim: number): Promise<Conversi
             QUALITY
           )
         );
-    return { blob, wasResized };
+    return { blob, width, height };
   } finally {
     bitmap?.close?.();
   }
 }
 
+const CAMINHO_OBJETO = '/storage/v1/object/public/';
+const CAMINHO_RENDER = '/storage/v1/render/image/public/';
+
+/**
+ * URL redimensionada pelo Supabase.
+ *
+ * ⚠️ A versao anterior so colava `?width=&quality=&format=` na url de
+ * `/object/public/` — e esse endpoint IGNORA os parametros. Conferido na
+ * origem: com `?width=200&quality=20` ele devolvia os mesmos 191688 bytes do
+ * arquivo cru. O redimensionamento vive em `/render/image/public/`, que para
+ * o mesmo pedido devolve 8561 bytes.
+ *
+ * Na pratica a galeria inteira servia os originais: 20,5 MB na home, media de
+ * 840 KB por arte, a maior com 4,3 MB. O pipeline de WebP do upload funciona —
+ * o que nunca funcionou foi a otimizacao na LEITURA.
+ *
+ * `format` saiu da lista: nao e parametro valido do Supabase (o unico aceito e
+ * `format=origin`, para DESLIGAR a conversao). Por padrao o endpoint ja
+ * negocia webp pelo header Accept do navegador.
+ */
 export const getOptimizedUrl = (url: string, quality = 82, width = 800) => {
-  if (!url || !url.includes('supabase.co')) return url;
+  if (!url) return url;
+
   try {
-    const optimizedUrl = new URL(url);
-    optimizedUrl.searchParams.set('width', String(width));
-    optimizedUrl.searchParams.set('quality', String(quality));
-    optimizedUrl.searchParams.set('format', 'webp');
-    return optimizedUrl.toString();
+    const otimizada = new URL(url);
+
+    // Aceita as duas formas: a url crua e uma ja otimizada, porque trocar o
+    // tamanho de uma url existente (card -> lightbox) e caso corrente.
+    if (otimizada.pathname.startsWith(CAMINHO_OBJETO)) {
+      otimizada.pathname = CAMINHO_RENDER + otimizada.pathname.slice(CAMINHO_OBJETO.length);
+    } else if (!otimizada.pathname.startsWith(CAMINHO_RENDER)) {
+      return url;
+    }
+    otimizada.searchParams.set('width', String(width));
+    otimizada.searchParams.set('quality', String(quality));
+    // `contain` preserva o enquadramento: e obra de arte, cortar nao e opcao.
+    otimizada.searchParams.set('resize', 'contain');
+    return otimizada.toString();
   } catch {
     return url;
   }
 };
 
+/**
+ * Desfaz o acima: volta para o arquivo cru em `/object/public/`.
+ *
+ * E o alvo do `onError` dos <img>. Se a transformacao falhar por qualquer
+ * motivo — cota, formato que o resizer nao aceita, indisponibilidade — a arte
+ * ainda aparece, pesada porem visivel.
+ */
 export const getOriginalImageUrl = (url: string) => {
   if (!url) return url;
 
   try {
-    const originalUrl = new URL(url);
-    originalUrl.searchParams.delete('width');
-    originalUrl.searchParams.delete('quality');
-    originalUrl.searchParams.delete('format');
-    return originalUrl.toString();
+    const original = new URL(url);
+    if (original.pathname.startsWith(CAMINHO_RENDER)) {
+      original.pathname = CAMINHO_OBJETO + original.pathname.slice(CAMINHO_RENDER.length);
+    }
+    for (const p of ['width', 'height', 'quality', 'resize', 'format']) {
+      original.searchParams.delete(p);
+    }
+    return original.toString();
   } catch {
     return url;
   }

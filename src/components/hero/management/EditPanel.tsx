@@ -17,6 +17,8 @@ import EditSocialLinks from './EditSocialLinks';
 import EditListSection from './EditListSection';
 import AvatarCropModal from './AvatarCropModal';
 import { convertToWebP } from '@/lib/imageUtils';
+import { storagePathFromPublicUrl } from '@/lib/storagePaths';
+import { mensagemDeErro, useToast } from '@/components/providers/ToastProvider';
 
 interface EditPanelProps {
   draft: ProfileData;
@@ -29,6 +31,7 @@ interface EditPanelProps {
 export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCancel }: EditPanelProps) {
   const [mounted, setMounted] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const { pushToast } = useToast();
   const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   useEffect(() => {
@@ -68,12 +71,10 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
       const file = new File([blob], 'avatar.png', { type: blob.type });
       const { blob: optimizedBlob } = await convertToWebP(file, 500);
 
-      if (draft.avatar_url && draft.avatar_url.includes('perfil')) {
-        const oldFileName = draft.avatar_url.split('/').pop()?.split('?')[0];
-        if (oldFileName) await supabase.storage.from('perfil').remove([oldFileName]);
-      }
+      const caminhoAntigo = storagePathFromPublicUrl(draft.avatar_url, 'perfil');
+      if (caminhoAntigo) await supabase.storage.from('perfil').remove([caminhoAntigo]);
 
-      const fileName = `avatar-${Date.now()}.webp`;
+      const fileName = `${crypto.randomUUID()}.webp`;
       const { error: upErr } = await supabase.storage
         .from('perfil')
         .upload(fileName, optimizedBlob, { upsert: false, contentType: 'image/webp', cacheControl: '31536000' });
@@ -83,9 +84,8 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
       const { data } = supabase.storage.from('perfil').getPublicUrl(fileName);
       onDraftChange({ ...draft, avatar_url: data.publicUrl });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      console.error('Avatar upload failed:', message);
-      alert('Upload failed: ' + message);
+      console.error('Avatar upload failed:', err);
+      pushToast(mensagemDeErro(err, 'Avatar upload failed. Please try again.'), 'error');
     } finally {
       setAvatarUploading(false);
     }

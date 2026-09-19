@@ -1,15 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Artwork } from '../types';
 import { getOptimizedUrl, getOriginalImageUrl } from '@/lib/imageUtils';
-
-const extractStoragePath = (url: string): string | null => {
-  const marker = '/gallery/';
-  const idx = url.indexOf(marker);
-  if (idx === -1) return null;
-  return url.substring(idx + marker.length);
-};
+import { storagePathFromPublicUrl } from '@/lib/storagePaths';
+import { mensagemDeErro, useToast } from '@/components/providers/ToastProvider';
 
 interface ArtworkCardProps {
   art: Artwork;
@@ -19,43 +14,92 @@ interface ArtworkCardProps {
   onDelete?: () => void;
 }
 
-function ArtworkCardImage({ imageUrl, title }: { imageUrl: string; title: string }) {
+function ArtworkCardImage({
+  imageUrl,
+  title,
+  width,
+  height,
+}: {
+  imageUrl: string;
+  title: string;
+  width?: number | null;
+  height?: number | null;
+}) {
   const [imageSrc, setImageSrc] = useState(() => getOptimizedUrl(imageUrl, 85, 800));
+  const [carregada, setCarregada] = useState(false);
+
+  /**
+   * Confere `complete` assim que o <img> entra no DOM.
+   *
+   * ⚠️ `onLoad` sozinho NAO basta. Quando a imagem vem do cache do navegador
+   * — um F5, por exemplo — ela termina de carregar ANTES de o React anexar o
+   * handler, e o evento nunca dispara. O `carregada` ficava false para sempre
+   * e o card exibia so o fundo cinza, com a arte invisivel em opacity-0 por
+   * cima. Reproduzido: recarregando a home, 24 imagens completas no DOM e as
+   * 24 com opacity 0.
+   *
+   * Cache frio nao mostrava nada disso, que e por que passou batido.
+   */
+  const aoMontar = useCallback((el: HTMLImageElement | null) => {
+    if (el?.complete && el.naturalWidth > 0) setCarregada(true);
+  }, []);
+
+  // O espaco do card e reservado ANTES de a imagem chegar. Sem isto o card tem
+  // altura zero ate o byte final, e o masonry de colunas CSS rebalanceia a
+  // grade inteira a cada imagem que termina — e o embaralhamento que se ve.
+  const proporcao = width && height ? `${width} / ${height}` : undefined;
 
   return (
-    <>
+    <div className="relative w-full bg-white/[0.03]" style={{ aspectRatio: proporcao }}>
+      {/* <img> cru, nao next/image: o onError precisa trocar a src quando a URL */}
+      {/* otimizada do Supabase falha (Firefox). Ver getOriginalImageUrl. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
+        ref={aoMontar}
         src={imageSrc}
         alt={title}
+        // Os atributos tambem entram na conta do navegador: mesmo sem o CSS
+        // acima ele ja consegue reservar a altura sozinho.
+        width={width ?? undefined}
+        height={height ?? undefined}
         loading="lazy"
         decoding="async"
+        onLoad={() => setCarregada(true)}
         onError={() => {
           const fallbackSrc = getOriginalImageUrl(imageUrl);
           if (imageSrc !== fallbackSrc) {
             setImageSrc(fallbackSrc);
+          } else {
+            // Nem o original carregou: tira o fundo de espera, que senao fica
+            // um retangulo cinza para sempre.
+            setCarregada(true);
           }
         }}
-        className="block w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+        className={`block w-full h-full object-cover transition-[transform,opacity] duration-700 group-hover:scale-105 ${
+          carregada ? 'opacity-100' : 'opacity-0'
+        }`}
       />
-    </>
+    </div>
   );
 }
 
 export default function ArtworkCard({ art, onClick, isAdmin, onEdit, onDelete }: ArtworkCardProps) {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const { pushToast } = useToast();
 
   const handleDelete = async () => {
     setDeleting(true);
     try {
       const { error: dbError } = await supabase.from('artworks').delete().eq('id', art.id);
       if (dbError) throw dbError;
-      const path = extractStoragePath(art.image_url);
+      const path = storagePathFromPublicUrl(art.image_url, 'gallery');
       if (path) await supabase.storage.from('gallery').remove([path]);
       onDelete?.();
+      pushToast('Artwork deleted.', 'warning');
     } catch (err) {
       console.error('Delete failed:', err);
+      pushToast(mensagemDeErro(err, 'Could not delete this artwork.'), 'error');
     } finally {
       setDeleting(false);
       setConfirming(false);
@@ -90,7 +134,7 @@ export default function ArtworkCard({ art, onClick, isAdmin, onEdit, onDelete }:
         )}
 
         <div className="relative overflow-hidden rounded-lg md:rounded-2xl bg-slate-900 transition-all duration-500 group-hover:shadow-[0_0_40px_rgba(59,130,246,0.15)]">
-          <ArtworkCardImage key={art.image_url} imageUrl={art.image_url} title={art.title} />
+          <ArtworkCardImage key={art.image_url} imageUrl={art.image_url} title={art.title} width={art.width} height={art.height} />
         </div>
 
         <div className="mt-2 md:mt-3 px-1">

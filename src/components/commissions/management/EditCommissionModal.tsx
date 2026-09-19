@@ -6,7 +6,9 @@ import Image from 'next/image';
 import { X, Check, Camera, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Commission, DESCRIPTION_MAX, COMM_TITLE_MAX, COMM_PRICE_MAX } from '../types';
-import { convertToWebP, getOptimizedUrl, getOriginalImageUrl } from '@/lib/imageUtils'; 
+import { convertToWebP, getOptimizedUrl, getOriginalImageUrl } from '@/lib/imageUtils';
+import { storagePathFromPublicUrl } from '@/lib/storagePaths';
+import { mensagemDeErro, useToast } from '@/components/providers/ToastProvider';
 
 interface EditCommissionModalProps {
   commission: Commission | null;
@@ -18,6 +20,7 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
   const [draft, setDraft] = useState<Partial<Commission>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const { pushToast } = useToast();
 
   useEffect(() => {
     if (commission) {
@@ -38,21 +41,15 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
 
     setIsUploading(true);
     try {
-      if (draft.image_url) {
-        const marker = '/gallery/commissions/';
-        const idx = draft.image_url.indexOf(marker);
-        if (idx !== -1) {
-          const oldPath = 'commissions/' + draft.image_url.substring(idx + marker.length);
-          await supabase.storage.from('gallery').remove([oldPath]);
-        }
-      }
+      const caminhoAntigo = storagePathFromPublicUrl(draft.image_url, 'gallery');
+      if (caminhoAntigo) await supabase.storage.from('gallery').remove([caminhoAntigo]);
 
-      const { blob } = await convertToWebP(file, 1000); 
-      const fileName = `commission-${Date.now()}.webp`;
+      const { blob } = await convertToWebP(file, 1000);
+      const fileName = `commissions/${crypto.randomUUID()}.webp`;
 
       const { error: upErr } = await supabase.storage
         .from('gallery')
-        .upload(`commissions/${fileName}`, blob, {
+        .upload(fileName, blob, {
           cacheControl: '31536000',
           upsert: false,
           contentType: 'image/webp'
@@ -60,11 +57,11 @@ export default function EditCommissionModal({ commission, onSave, onClose }: Edi
 
       if (upErr) throw upErr;
 
-      const { data } = supabase.storage.from('gallery').getPublicUrl(`commissions/${fileName}`);
+      const { data } = supabase.storage.from('gallery').getPublicUrl(fileName);
       setDraft(prev => ({ ...prev, image_url: data.publicUrl }));
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      console.error('Upload failed:', message);
+      console.error('Upload failed:', err);
+      pushToast(mensagemDeErro(err, 'Image upload failed. Please try again.'), 'error');
     } finally {
       setIsUploading(false);
     }

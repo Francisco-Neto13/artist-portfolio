@@ -1,20 +1,16 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Artwork, ArtworkCategory, ArtworkType } from '../types';
-import { convertToWebP } from '@/lib/imageUtils'; 
-
-const extractStoragePath = (url: string): string | null => {
-  const marker = '/gallery/';
-  const idx = url.indexOf(marker);
-  if (idx === -1) return null;
-  return url.substring(idx + marker.length);
-};
+import { convertToWebP } from '@/lib/imageUtils';
+import { storagePathFromPublicUrl } from '@/lib/storagePaths';
+import { mensagemDeErro, useToast } from '@/components/providers/ToastProvider';
 
 export function useUploadLogic(
   onSuccess: () => void,
   onClose: () => void,
   editingArtwork?: Artwork | null
 ) {
+  const { pushToast } = useToast();
   const previewBlobUrlRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -100,14 +96,20 @@ export function useUploadLogic(
 
     try {
       let publicUrl = editingArtwork?.image_url || '';
+      // Mantem as medidas da obra ao editar so os metadados, sem trocar o arquivo.
+      let width = editingArtwork?.width ?? null;
+      let height = editingArtwork?.height ?? null;
 
       if (file) {
         setUploadProgress(10);
-        
-        const { blob } = await convertToWebP(file);
+
+        const conversao = await convertToWebP(file);
+        const blob = conversao.blob;
+        width = conversao.width;
+        height = conversao.height;
 
         setUploadProgress(40);
-        const fileName = `${Math.random()}-${Date.now()}.webp`;
+        const fileName = `${crypto.randomUUID()}.webp`;
 
         const { error: upErr } = await supabase.storage
           .from('gallery')
@@ -119,7 +121,7 @@ export function useUploadLogic(
         if (upErr) throw upErr;
 
         if (editingArtwork?.image_url) {
-          const oldPath = extractStoragePath(editingArtwork.image_url);
+          const oldPath = storagePathFromPublicUrl(editingArtwork.image_url, 'gallery');
           if (oldPath) await supabase.storage.from('gallery').remove([oldPath]);
         }
 
@@ -130,7 +132,7 @@ export function useUploadLogic(
       }
 
       setUploadProgress(85);
-      const payload = { ...formData, image_url: publicUrl };
+      const payload = { ...formData, image_url: publicUrl, width, height };
 
       const { error } = editingArtwork
         ? await supabase.from('artworks').update(payload).eq('id', editingArtwork.id)
@@ -143,8 +145,10 @@ export function useUploadLogic(
 
       onSuccess();
       onClose();
+      pushToast(editingArtwork ? 'Artwork updated.' : 'Artwork published.', 'success');
     } catch (err) {
       console.error('Upload failed:', err);
+      pushToast(mensagemDeErro(err, 'Upload failed. Please try again.'), 'error');
       setUploadProgress(0);
     } finally {
       setLoading(false);

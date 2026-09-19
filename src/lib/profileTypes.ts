@@ -1,3 +1,6 @@
+/** `site_profile` e singleton: uma linha so, sempre neste slug. */
+export const SITE_PROFILE_SLUG = 'main';
+
 export const NAME_MAX = 17;
 export const BIO_MAX = 200;
 export const LOCATION_MAX = 30;

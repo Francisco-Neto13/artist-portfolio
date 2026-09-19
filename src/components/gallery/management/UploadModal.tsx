@@ -66,6 +66,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess, editingArtwork
           <div className="aspect-video w-full rounded-xl overflow-hidden border-2 border-dashed border-slate-700 bg-slate-950 group relative transition-all hover:border-blue-500/40 shrink-0">
             {previewUrl ? (
               <>
+                {/* Preview local de um blob: URL, que o next/image nao otimiza. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={previewUrl} className="w-full h-full object-contain" alt="Preview" />
                 <label className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center cursor-pointer backdrop-blur-sm">

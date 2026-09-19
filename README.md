@@ -30,7 +30,7 @@ The project implements advanced software engineering practices to achieve superi
 
 * **Client-Side Image Optimization Pipeline:** A sophisticated system utilizing *Web Workers* to process and convert uploads to **WebP** format directly in the browser. It applies context-aware dynamic resizing for Avatars, Gallery assets, and Commission tiers.
 * **Serverless & Real-time Architecture:** Fully integrated with **Supabase**, leveraging PostgreSQL for data integrity and Object Storage with granular Row Level Security (RLS) policies.
-* **Core Web Vitals Optimization:** Engineered for high scores in *Largest Contentful Paint (LCP)* and *Cumulative Layout Shift (CLS)* through aggressive caching strategies and hybrid rendering.
+* **Aggressive Asset Caching:** Uploaded assets are served with a one-year immutable cache, and gallery URLs carry context-aware width and quality parameters so each surface downloads only what it renders.
 * **Responsive Adaptive Interface:** A modern, dark-themed design system featuring fluid components and mobile-optimized navigation built with Tailwind CSS.
 
 ## Technology Stack

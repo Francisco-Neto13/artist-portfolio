@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { CATEGORY_NAME_MAX, THEME_NAME_MAX } from '../types';
-import MetadataToasts, { Toast } from './MetadataToasts';
 import MetadataConfirmModal, { ConfirmState } from './MetadataConfirmModal';
 import MetadataList from './MetadataList';
+import { useToast } from '@/components/providers/ToastProvider';
 
 interface MetadataManagerProps {
   isOpen: boolean;
@@ -23,18 +23,12 @@ export default function MetadataManager({
   const [newName, setNewName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
-  const [toasts, setToasts] = useState<Toast[]>([]);
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
+  const { pushToast } = useToast();
 
   const currentMax = activeType === 'category' ? CATEGORY_NAME_MAX : THEME_NAME_MAX;
 
   if (!isOpen) return null;
-
-  const pushToast = (message: string, type: Toast['type'] = 'success') => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
-  };
 
   const handleAdd = async () => {
     if (!newName.trim() || newName.length > currentMax) return;
@@ -77,7 +71,6 @@ export default function MetadataManager({
 
   return (
     <>
-      <MetadataToasts toasts={toasts} />
       <MetadataConfirmModal
         confirmState={confirmState}
         activeType={activeType}

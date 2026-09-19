@@ -1,7 +1,6 @@
 import { supabase } from '@/lib/supabase';
+import { SITE_PROFILE_SLUG } from '@/lib/profileTypes';
 import type { ProfileData, SiteProfile, SocialLinks, ProfileTag } from '@/lib/profileTypes';
-
-export const SITE_PROFILE_SLUG = 'main';
 
 type RawSiteProfile = Partial<SiteProfile> & {
   slug?: string | null;
@@ -50,7 +49,7 @@ function toSiteProfilePayload(profile: ProfileData, commissionStatus?: SiteProfi
   };
 }
 
-export function invalidateSiteProfileCache() {
+function invalidateSiteProfileCache() {
   cachedProfile = null;
   cachedAt = 0;
   inFlightProfileRequest = null;

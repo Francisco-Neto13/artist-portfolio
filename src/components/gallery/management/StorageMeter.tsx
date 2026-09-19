@@ -8,20 +8,37 @@ const MAX_STORAGE = 1 * 1024 * 1024 * 1024;
 export default function StorageMeter({ refreshTrigger }: { refreshTrigger?: unknown }) {
   const [usage, setUsage] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-
-  const fetchUsage = async () => {
-    try {
-      const { data, error } = await supabase.rpc('get_storage_usage');
-      if (!error) setUsage(data || 0);
-    } catch (err) {
-      console.error('Failed to fetch storage usage:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Antes a falha era engolida (`if (!error)` sem else) e a barra ficava
+  // eternamente em 0% — indistinguivel de um bucket vazio. E ela FALHAVA: a
+  // migracao revogava o execute de `get_storage_usage()` de `authenticated` e
+  // nunca devolvia. Com o erro na tela, esse tipo de bug aparece no mesmo dia.
+  const [erro, setErro] = useState(false);
 
   useEffect(() => {
-    fetchUsage();
+    let ativo = true;
+
+    const fetchUsage = async () => {
+      const { data, error } = await supabase.rpc('get_storage_usage');
+      if (!ativo) return;
+
+      if (error) {
+        console.error('Failed to fetch storage usage:', error.message);
+        setErro(true);
+      } else if (data === null) {
+        // A funcao devolve null para quem nao e admin. Nao e "vazio".
+        setErro(true);
+      } else {
+        setErro(false);
+        setUsage(data);
+      }
+      setLoading(false);
+    };
+
+    void fetchUsage();
+
+    // O componente desmonta quando o admin sai do modo de gestao; sem isto o
+    // setState da requisicao antiga cairia num componente que ja morreu.
+    return () => { ativo = false; };
   }, [refreshTrigger]);
 
   const percentage = Math.min((usage / MAX_STORAGE) * 100, 100);
@@ -41,7 +58,9 @@ export default function StorageMeter({ refreshTrigger }: { refreshTrigger?: unkn
     ? 'rgba(245,158,11,0.5)'
     : 'rgba(59,130,246,0.4)';
 
-  const statusDot = isCritical
+  const statusDot = erro
+    ? 'bg-red-500'
+    : isCritical
     ? 'bg-red-500 animate-pulse'
     : isWarning
     ? 'bg-amber-500 animate-pulse'
@@ -59,23 +78,29 @@ export default function StorageMeter({ refreshTrigger }: { refreshTrigger?: unkn
           </span>
           {!loading && (
             <span className="text-[9px] font-mono text-slate-700">
-              {usedMB} MB / 1024 MB
+              {erro ? 'unavailable' : `${usedMB} MB / 1024 MB`}
             </span>
           )}
         </div>
 
         {!loading && (
-          <span className={`text-[9px] font-bold tabular-nums tracking-wider ${
-            isCritical ? 'text-red-500' : isWarning ? 'text-amber-500' : 'text-slate-600'
-          }`}>
-            {percentage.toFixed(1)}% | {statusLabel}
-          </span>
+          erro ? (
+            <span className="text-[9px] font-bold tracking-wider text-red-500">
+              Could not read storage usage
+            </span>
+          ) : (
+            <span className={`text-[9px] font-bold tabular-nums tracking-wider ${
+              isCritical ? 'text-red-500' : isWarning ? 'text-amber-500' : 'text-slate-600'
+            }`}>
+              {percentage.toFixed(1)}% | {statusLabel}
+            </span>
+          )
         )}
       </div>
 
       <div className="relative w-full h-[2px] bg-slate-900">
-        {loading ? (
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-700/40 to-transparent animate-pulse" />
+        {loading || erro ? (
+          <div className={`absolute inset-0 ${erro ? 'bg-red-900/30' : 'bg-gradient-to-r from-transparent via-slate-700/40 to-transparent animate-pulse'}`} />
         ) : (
           <div
             className={`absolute top-0 left-0 h-full bg-gradient-to-r ${barColor} transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)]`}

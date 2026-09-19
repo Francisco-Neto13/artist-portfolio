@@ -44,7 +44,7 @@ export default function DashboardPage() {
             <div>
               <h1 className="text-xl md:text-2xl font-black text-white uppercase tracking-tighter">Admin Dashboard</h1>
               <p className="text-slate-500 text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] break-all max-w-[200px] md:max-w-none">
-                {userName || 'Verificando sessao...'}
+                {userName || 'Verifying session...'}
               </p>
             </div>
           </div>

@@ -2,6 +2,7 @@
 import { Pencil } from 'lucide-react';
 import { ArtworkCategory, ArtworkType } from '@/components/gallery/types';
 import StorageMeter from '@/components/gallery/management/StorageMeter';
+import type { PeriodKey, PeriodOption } from '@/lib/periods';
 
 interface GalleryFiltersProps {
   categories: ArtworkCategory[];
@@ -9,20 +10,26 @@ interface GalleryFiltersProps {
   selectedCategory: string;
   selectedType: string;
   searchQuery: string;
+  periodOptions: PeriodOption[];
+  selectedPeriod: PeriodKey;
   filteredCount: number;
   isAdmin: boolean;
   storageRefresh: number;
   onCategoryChange: (cat: string) => void;
   onTypeChange: (type: string) => void;
   onSearchChange: (q: string) => void;
+  onPeriodChange: (key: PeriodKey) => void;
   onOpenManager: () => void;
 }
 
 export default function GalleryFilters({
   categories, types, selectedCategory, selectedType,
-  searchQuery, filteredCount, isAdmin, storageRefresh,
-  onCategoryChange, onTypeChange, onSearchChange, onOpenManager
+  searchQuery, periodOptions, selectedPeriod, filteredCount, isAdmin, storageRefresh,
+  onCategoryChange, onTypeChange, onSearchChange, onPeriodChange, onOpenManager
 }: GalleryFiltersProps) {
+  // Com uma opcao so ("All Time") nao ha o que escolher: a barra some.
+  const mostrarPeriodo = periodOptions.length > 1;
+
   return (
     <>
       <div className="mb-6 md:mb-16">
@@ -69,7 +76,7 @@ export default function GalleryFilters({
           ))}
         </div>
 
-        <div className="flex items-center gap-3 mt-3 md:mt-5 border-t border-white/5 pt-3 md:pt-5">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-3 mt-3 md:mt-5 border-t border-white/5 pt-3 md:pt-5">
           <div className="relative w-full md:max-w-sm">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600">
               <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
@@ -82,7 +89,30 @@ export default function GalleryFilters({
               className="w-full bg-white/[0.02] border border-white/5 rounded-xl pl-9 pr-4 py-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 placeholder:text-slate-700 outline-none focus:border-blue-500/30 focus:bg-white/[0.04] transition-all"
             />
           </div>
-          <span className="text-slate-600 text-[10px] font-black uppercase tracking-widest shrink-0">
+          {mostrarPeriodo && (
+            <div className="flex items-center gap-2 overflow-x-auto gallery-scrollbar min-w-0">
+              {periodOptions.map((opcao) => (
+                <button
+                  key={opcao.key}
+                  onClick={() => onPeriodChange(opcao.key)}
+                  aria-pressed={selectedPeriod === opcao.key}
+                  className={`flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-full transition-all cursor-pointer whitespace-nowrap border shrink-0 ${
+                    selectedPeriod === opcao.key
+                      ? 'bg-blue-600/10 border-blue-500/50 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.1)]'
+                      : 'border-white/5 bg-white/[0.01] text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  {opcao.label}
+                  {/* A contagem adianta o resultado do clique. */}
+                  <span className={selectedPeriod === opcao.key ? 'text-blue-500/60' : 'text-slate-700'}>
+                    {opcao.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <span className="text-slate-600 text-[10px] font-black uppercase tracking-widest shrink-0 ml-auto">
             {filteredCount} <span className="hidden md:inline">Pieces </span>Found
           </span>
         </div>

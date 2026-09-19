@@ -13,4 +13,6 @@ export interface Commission {
   created_at: string;
 }
 
-export type CommissionStatus = 'open' | 'closed' | 'waitlist';
+// Fonte unica: o status vive no `site_profile`, nao no tier. Reexportado aqui
+// porque os componentes de commission ja importavam deste arquivo.
+export type { CommissionStatus } from '@/lib/profileTypes';

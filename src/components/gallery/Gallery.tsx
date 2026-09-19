@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAdminStatus } from '@/components/providers/AdminStatusProvider';
 import { Artwork, ArtworkCategory, ArtworkType } from '@/components/gallery/types';
+import { buildPeriodOptions, matchesPeriod, PERIODO_PADRAO, type PeriodKey } from '@/lib/periods';
 import UploadModal from '@/components/gallery/management/UploadModal';
 import MetadataManager from '@/components/gallery/management/MetadataManager';
 import ArtworkLightbox from '@/components/gallery/display/ArtworkLightbox';
@@ -10,14 +11,26 @@ import GalleryHeader from '@/components/gallery/display/GalleryHeader';
 import GalleryFilters from '@/components/gallery/display/GalleryFilters';
 import GalleryGrid from '@/components/gallery/display/GalleryGrid';
 
-export default function Gallery() {
+interface GalleryProps {
+  /**
+   * Obras e metadados carregados no servidor. Vinham vazios e a galeria exibia
+   * "No artworks found in this category." por segundos, ate o fetch do cliente
+   * responder — inclusive no HTML que o buscador le.
+   */
+  initialArtworks: Artwork[];
+  initialCategories: ArtworkCategory[];
+  initialTypes: ArtworkType[];
+}
+
+export default function Gallery({ initialArtworks, initialCategories, initialTypes }: GalleryProps) {
   const { isAdmin } = useAdminStatus();
-  const [artworks, setArtworks] = useState<Artwork[]>([]);
+  const [artworks, setArtworks] = useState<Artwork[]>(initialArtworks);
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [selectedType, setSelectedType] = useState('All Themes');
   const [searchQuery, setSearchQuery] = useState('');
-  const [dbCategories, setDbCategories] = useState<ArtworkCategory[]>([]);
-  const [dbTypes, setDbTypes] = useState<ArtworkType[]>([]);
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodKey>(PERIODO_PADRAO);
+  const [dbCategories, setDbCategories] = useState<ArtworkCategory[]>(initialCategories);
+  const [dbTypes, setDbTypes] = useState<ArtworkType[]>(initialTypes);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
@@ -40,12 +53,17 @@ export default function Gallery() {
   }, []);
 
   useEffect(() => {
+    // Ja veio tudo do servidor; so busca de novo quando a geracao falhou e a
+    // pagina chegou vazia. As recargas depois de upload/delete continuam
+    // acontecendo pelos handlers, que chamam fetchArtworks direto.
+    if (initialArtworks.length > 0 || initialCategories.length > 0) return;
+
     const load = async () => {
       await Promise.all([fetchArtworks(), fetchMetadata()]);
     };
 
     void load();
-  }, [fetchArtworks, fetchMetadata]);
+  }, [fetchArtworks, fetchMetadata, initialArtworks.length, initialCategories.length]);
 
   const handleAddItem = async (table: 'artwork_categories' | 'artwork_types', name: string) => {
     await supabase.from(table).insert([{ name }]);
@@ -66,20 +84,37 @@ export default function Gallery() {
     return count ?? 0;
   };
 
+  // As opcoes de periodo saem das datas do acervo, nao de uma lista fixa.
+  const periodOptions = useMemo(
+    () => buildPeriodOptions(artworks.map((a) => a.created_at)),
+    [artworks],
+  );
+
+  // O acervo muda (upload, delete) e o periodo escolhido pode deixar de existir
+  // na lista. Sem isto a galeria ficaria presa num recorte invisivel, sem chip
+  // aceso e aparentemente vazia.
+  //
+  // Derivado no render, nao num useEffect que chama setState: assim nao ha o
+  // passo intermediario em que a tela ja mostra o recorte errado.
+  const periodoAtivo = periodOptions.some((o) => o.key === selectedPeriod)
+    ? selectedPeriod
+    : PERIODO_PADRAO;
+
   const filteredArt = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
     return artworks.filter((art) => {
       const catMatch = selectedCategory === 'All Categories' || art.category === selectedCategory;
       const typeMatch = selectedType === 'All Themes' || art.type === selectedType;
+      const periodMatch = matchesPeriod(art.created_at, periodoAtivo);
       const searchMatch = normalizedQuery === '' || (
         art.title?.toLowerCase().includes(normalizedQuery) ||
         art.category?.toLowerCase().includes(normalizedQuery) ||
         art.type?.toLowerCase().includes(normalizedQuery)
       );
-      return catMatch && typeMatch && searchMatch;
+      return catMatch && typeMatch && periodMatch && searchMatch;
     });
-  }, [artworks, searchQuery, selectedCategory, selectedType]);
+  }, [artworks, searchQuery, selectedCategory, selectedType, periodoAtivo]);
 
   const handleNavigate = (direction: 'prev' | 'next') => {
     const newIndex = direction === 'next'
@@ -99,6 +134,9 @@ export default function Gallery() {
           selectedCategory={selectedCategory}
           selectedType={selectedType}
           searchQuery={searchQuery}
+          periodOptions={periodOptions}
+          selectedPeriod={periodoAtivo}
+          onPeriodChange={setSelectedPeriod}
           filteredCount={filteredArt.length}
           isAdmin={isAdmin}
           storageRefresh={storageRefresh}

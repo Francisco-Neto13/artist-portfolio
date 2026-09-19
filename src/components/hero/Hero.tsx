@@ -1,44 +1,64 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Pencil } from 'lucide-react';
 import { useAdminStatus } from '@/components/providers/AdminStatusProvider';
+import { mensagemDeErro, useToast } from '@/components/providers/ToastProvider';
 import { getSiteProfile, saveSiteProfile } from '@/lib/profile';
 import { ProfileData, DEFAULT_PROFILE } from '@/lib/profileTypes';
+import type { SiteProfile } from '@/lib/profileTypes';
 import HeroContent from './display/HeroContent';
 import EditPanel from './management/EditPanel';
 import InfoModal from './display/InfoModal';
 
-export default function Hero() {
+/** Junta o que veio do banco com os valores de reserva, sem deixar buraco. */
+function comReserva(data: SiteProfile | null): ProfileData | null {
+  if (!data) return null;
+
+  return {
+    ...DEFAULT_PROFILE,
+    ...data,
+    social_links: { ...DEFAULT_PROFILE.social_links, ...data.social_links },
+    languages: data.languages ?? [],
+    hobbies: data.hobbies ?? [],
+  };
+}
+
+interface HeroProps {
+  /**
+   * Perfil carregado no servidor. Vem `null` so quando o Supabase nao respondeu
+   * na geracao da pagina — ai o componente busca pelo cliente, como fazia antes.
+   */
+  initialProfile: SiteProfile | null;
+}
+
+export default function Hero({ initialProfile }: HeroProps) {
   const { isAdmin } = useAdminStatus();
+  const { pushToast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeModal, setActiveModal] = useState<null | 'languages' | 'hobbies'>(null);
   const [displayText, setDisplayText] = useState('');
-  const [profile, setProfile] = useState<ProfileData>(DEFAULT_PROFILE);
-  const [draft, setDraft] = useState<ProfileData>(DEFAULT_PROFILE);
-  const [profileLoaded, setProfileLoaded] = useState(false);
+  const perfilDoServidor = useMemo(() => comReserva(initialProfile), [initialProfile]);
+  const [profile, setProfile] = useState<ProfileData>(perfilDoServidor ?? DEFAULT_PROFILE);
+  const [draft, setDraft] = useState<ProfileData>(perfilDoServidor ?? DEFAULT_PROFILE);
+  const [profileLoaded, setProfileLoaded] = useState(perfilDoServidor !== null);
 
   useEffect(() => {
+    // Com o perfil vindo do servidor nao ha o que buscar: esta na tela desde o
+    // primeiro byte. Este caminho so roda quando a geracao falhou.
+    if (perfilDoServidor) return;
+
     const load = async () => {
       const data = await getSiteProfile();
-      if (data) {
-        const nextProfile: ProfileData = {
-          ...DEFAULT_PROFILE,
-          ...data,
-          social_links: {
-            ...DEFAULT_PROFILE.social_links,
-            ...data.social_links,
-          },
-          languages: data.languages ?? [],
-          hobbies: data.hobbies ?? [],
-        };
+      const nextProfile = comReserva(data);
+      if (nextProfile) {
         setProfile(nextProfile);
         setDraft(nextProfile);
       }
       setProfileLoaded(true);
     };
     load();
-  }, []);
+  }, [perfilDoServidor]);
 
   useEffect(() => {
     if (!profileLoaded) return;
@@ -61,9 +81,11 @@ export default function Hero() {
       await saveSiteProfile(draft);
       setProfile({ ...draft });
       setIsEditing(false);
+      pushToast('Profile saved.', 'success');
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      console.error('Save failed:', message);
+      console.error('Save failed:', err);
+      // O painel fica ABERTO de proposito: fechar apagaria a edicao que nao subiu.
+      pushToast(mensagemDeErro(err, 'Could not save the profile. Please try again.'), 'error');
     } finally {
       setIsSaving(false);
     }

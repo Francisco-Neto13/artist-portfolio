@@ -5,6 +5,12 @@ export interface Artwork {
   category: string;
   type: string;
   created_at: string;
+  /**
+   * Medidas do arquivo enviado. Anulaveis: obra gravada antes da migracao
+   * 20260919140000 nao tem, e o card cai no comportamento antigo.
+   */
+  width?: number | null;
+  height?: number | null;
 }
 
 export interface ArtworkCategory {
@@ -21,7 +27,9 @@ export interface ArtworkType {
 
 export interface ConversionResult {
   blob: Blob;
-  wasResized: boolean;
+  /** Medidas depois do redimensionamento — e o que vai para o banco. */
+  width: number;
+  height: number;
 }
 
 export const CATEGORY_NAME_MAX = 15;

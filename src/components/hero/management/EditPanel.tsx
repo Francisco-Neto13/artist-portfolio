@@ -29,15 +29,14 @@ interface EditPanelProps {
 }
 
 export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCancel }: EditPanelProps) {
-  const [mounted, setMounted] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const { pushToast } = useToast();
   const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true);
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = 'unset'; };
+    return () => { document.body.style.overflow = previousOverflow; };
   }, []);
 
   const addItem = (type: 'languages' | 'hobbies') => {
@@ -90,8 +89,6 @@ export default function EditPanel({ draft, isSaving, onDraftChange, onSave, onCa
       setAvatarUploading(false);
     }
   };
-
-  if (!mounted) return null;
 
   const isInvalid = 
     draft.full_name.length > NAME_MAX || 

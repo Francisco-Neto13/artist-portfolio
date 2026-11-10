@@ -37,7 +37,7 @@ export default function Hero({ initialProfile }: HeroProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeModal, setActiveModal] = useState<null | 'languages' | 'hobbies'>(null);
-  const [displayText, setDisplayText] = useState('');
+  const [typedName, setTypedName] = useState({ name: '', text: '' });
   const perfilDoServidor = useMemo(() => comReserva(initialProfile), [initialProfile]);
   const [profile, setProfile] = useState<ProfileData>(perfilDoServidor ?? DEFAULT_PROFILE);
   const [draft, setDraft] = useState<ProfileData>(perfilDoServidor ?? DEFAULT_PROFILE);
@@ -64,11 +64,11 @@ export default function Hero({ initialProfile }: HeroProps) {
     if (!profileLoaded) return;
     let index = 0;
     let iv: ReturnType<typeof setInterval>;
-    setDisplayText('');
     const fullText = profile.full_name || 'Atmisuki!';
     const t = setTimeout(() => {
+      setTypedName({ name: fullText, text: '' });
       iv = setInterval(() => {
-        if (index <= fullText.length) { setDisplayText(fullText.slice(0, index)); index++; }
+        if (index <= fullText.length) { setTypedName({ name: fullText, text: fullText.slice(0, index) }); index++; }
         else clearInterval(iv);
       }, 100);
     }, 800);
@@ -99,7 +99,7 @@ export default function Hero({ initialProfile }: HeroProps) {
       <div className="w-full max-w-5xl mx-auto">
         <HeroContent
           profile={profile}
-          displayText={displayText}
+          displayText={typedName.name === (profile.full_name || 'Atmisuki!') ? typedName.text : ''}
           onOpenModal={setActiveModal}
         />
         {isAdmin && (

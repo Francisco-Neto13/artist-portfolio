@@ -136,7 +136,7 @@ export default function CommissionSection({ initialTiers, initialProfile }: Comm
       </div>
 
       {editingCommission && (
-        <EditCommissionModal commission={editingCommission} onSave={handleUpdate} onClose={() => setEditingCommission(null)} />
+        <EditCommissionModal key={editingCommission.id} commission={editingCommission} onSave={handleUpdate} onClose={() => setEditingCommission(null)} />
       )}
 
       {deletingId && (

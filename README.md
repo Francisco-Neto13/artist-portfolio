@@ -51,6 +51,26 @@ The platform features an integrated, secure administrative area for comprehensiv
 * **Commission System:** Management of pricing tiers, service descriptions, and visual references.
 * **Asset Optimization:** Automated oversight of image dimensions and asset compression.
 
+## Dependency updates and protected branches
+
+Work on a separate branch and open a pull request into `main`. GitHub requires
+the `Lint, tipos, testes e build` check to pass against the current `main`,
+including for administrators. Merging into `main` publishes through Vercel.
+Merged branches are deleted automatically.
+
+Dependabot checks weekly, with at most one routine npm PR and one Actions PR
+open at a time. npm minor and patch releases share a group so related packages
+can be tested together. npm major upgrades require a deliberate migration;
+security updates remain separate from these routine limits and version filters.
+
+Repository settings are recorded in `.github/settings/`. An administrator can
+reapply them with the GitHub CLI:
+
+```sh
+gh api --method PATCH repos/Francisco-Neto13/artist-portfolio --input .github/settings/repository.json
+gh api --method PUT repos/Francisco-Neto13/artist-portfolio/branches/main/protection --input .github/settings/main-protection.json
+```
+
 ## License
 
 This project is proprietary and protected by copyright.

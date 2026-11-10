@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { X, Check, Camera, Image as ImageIcon } from 'lucide-react';
@@ -11,29 +11,21 @@ import { storagePathFromPublicUrl } from '@/lib/storagePaths';
 import { mensagemDeErro, useToast } from '@/components/providers/ToastProvider';
 
 interface EditCommissionModalProps {
-  commission: Commission | null;
+  commission: Commission;
   onSave: (id: string, updates: Partial<Commission>) => void;
   onClose: () => void;
 }
 
 export default function EditCommissionModal({ commission, onSave, onClose }: EditCommissionModalProps) {
-  const [draft, setDraft] = useState<Partial<Commission>>({});
+  const [draft, setDraft] = useState<Partial<Commission>>(() => ({
+    title: commission.title,
+    price: commission.price,
+    description: commission.description,
+    image_url: commission.image_url,
+  }));
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const { pushToast } = useToast();
-
-  useEffect(() => {
-    if (commission) {
-      setDraft({
-        title: commission.title,
-        price: commission.price,
-        description: commission.description,
-        image_url: commission.image_url
-      });
-    }
-  }, [commission]);
-
-  if (!commission) return null;
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

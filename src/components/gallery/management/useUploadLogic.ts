@@ -34,18 +34,20 @@ export function useUploadLogic(
     setPreviewUrlState(nextUrl);
   }, []);
 
-  const fetchMetadata = useCallback(async () => {
-    const [catRes, typeRes] = await Promise.all([
-      supabase.from('artwork_categories').select('*').order('name'),
-      supabase.from('artwork_types').select('*').order('name'),
-    ]);
-    if (catRes.data) setAvailableCategories(catRes.data);
-    if (typeRes.data) setAvailableTypes(typeRes.data);
-  }, []);
-
   useEffect(() => {
-    fetchMetadata();
-  }, [fetchMetadata]);
+    let cancelled = false;
+    async function loadMetadata() {
+      const [catRes, typeRes] = await Promise.all([
+        supabase.from('artwork_categories').select('*').order('name'),
+        supabase.from('artwork_types').select('*').order('name'),
+      ]);
+      if (cancelled) return;
+      if (catRes.data) setAvailableCategories(catRes.data);
+      if (typeRes.data) setAvailableTypes(typeRes.data);
+    }
+    void loadMetadata();
+    return () => { cancelled = true; };
+  }, []);
 
   const resetForm = useCallback(() => {
     if (previewBlobUrlRef.current) {
